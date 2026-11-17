@@ -1,0 +1,806 @@
+<main>
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-terrarium" aria-selected="true" aria-controls="view-terrarium">Temperature</button>
+      <button class="tab" role="tab" id="tab-water" aria-selected="false" aria-controls="view-water">Water Level</button>
+      <button class="tab" role="tab" id="tab-specs" aria-selected="false" aria-controls="view-specs">Specifications</button>
+    </div>
+
+    <!-- ============ TERRARIUM ============ -->
+    <section id="view-terrarium" role="tabpanel" aria-labelledby="tab-terrarium">
+      <div class="stage">
+        <div class="controls">
+          <div class="lab">Temp</div>
+          <div class="slider-wrap">
+            <input type="range" id="tempSlider" min="20" max="50" step="0.5" value="25"
+                   aria-label="Temperature setpoint, degrees Celsius" />
+          </div>
+          <div class="setval" id="setVal">25.0°</div>
+          <div class="setunit">°C setpoint</div>
+        </div>
+
+        <div class="tankbox">
+          <svg id="tankSvg" viewBox="0 0 700 360" role="img" aria-label="Empty terrarium with a heating panel centred on the top, radiating heat downward">
+            <defs>
+              <linearGradient id="airGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop id="airTop" offset="0%" stop-color="#ff8a3c" stop-opacity="0.55"/>
+                <stop id="airBot" offset="100%" stop-color="#ff8a3c" stop-opacity="0.04"/>
+              </linearGradient>
+            </defs>
+            <!-- lid -->
+            <rect x="60" y="34" width="520" height="10" rx="3" fill="var(--glass-edge)"/>
+            <!-- heating panel, top centre -->
+            <rect id="panelGlow" x="190" y="18" width="260" height="16" rx="4" fill="#571f08"/>
+            <rect x="190" y="18" width="260" height="16" rx="4" fill="none" stroke="var(--ink)" stroke-opacity=".35"/>
+            <text x="320" y="11" text-anchor="middle" font-size="11" fill="var(--muted)">HEATING PANEL — TOP CENTRE</text>
+            <!-- infrared rays -->
+            <g id="rays" stroke="var(--heat2)" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.25">
+              <path class="ray" d="M225 52 q-10 26 0 52 q10 26 0 52"/>
+              <path class="ray" d="M270 52 q-10 26 0 52 q10 26 0 52"/>
+              <path class="ray" d="M320 52 q-10 26 0 52 q10 26 0 52"/>
+              <path class="ray" d="M370 52 q-10 26 0 52 q10 26 0 52"/>
+              <path class="ray" d="M415 52 q-10 26 0 52 q10 26 0 52"/>
+            </g>
+            <!-- tank air -->
+            <rect x="68" y="44" width="504" height="272" fill="url(#airGrad)"/>
+            <!-- glass -->
+            <rect x="60" y="44" width="520" height="280" fill="none" stroke="var(--glass-edge)" stroke-width="8"/>
+            <line x1="60" y1="324" x2="580" y2="324" stroke="var(--glass-edge)" stroke-width="8"/>
+            <!-- depth markers -->
+            <g font-size="11" fill="var(--muted)">
+              <text x="592" y="52">z = 0 (top)</text>
+              <text x="592" y="188">z = H/2</text>
+              <text x="592" y="322">z = H</text>
+            </g>
+            <g stroke="var(--muted)" stroke-width="1" opacity=".6">
+              <line x1="580" y1="48" x2="588" y2="48"/><line x1="580" y1="184" x2="588" y2="184"/><line x1="580" y1="320" x2="588" y2="320"/>
+            </g>
+            <text x="320" y="348" text-anchor="middle" font-size="11" fill="var(--muted)">AIR ONLY — EMPTY</text>
+          </svg>
+
+          <div class="readouts">
+            <div class="ro"><div class="k">Mean air temp</div><div class="v" id="roTemp">25.0 °C</div></div>
+            <div class="ro"><div class="k">State</div><div class="v steady" id="roState">Steady state</div></div>
+            <div class="ro"><div class="k">Heater power</div><div class="v" id="roPower">0.0 W</div></div>
+            <div class="ro"><div class="k">Pressure (sealed)</div><div class="v" id="roPress">101.3 kPa</div></div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="sec">Graphs</h2>
+      <div class="graphs">
+        <div class="gcard">
+          <h3>Air temperature — live · oscillator signal</h3>
+          <p class="sub">Rolling window: the last 100 s (t − 100 → t). Starts in steady state; moving the slider shows the transient. The solid orange line is the <strong>actual temperature — an oscillator signal</strong>: it swings around the setpoint inside its dashed orange envelope as it settles. Behind it, the white dashed line is the <strong>mean — the Newton exponential</strong>. The y-axis auto-zooms and recentres — as the curves converge, the top of the axis comes down and the shrinking oscillation fills the graph.</p>
+          <canvas id="gTransient" width="480" height="230" aria-label="Graph of air temperature over the last 100 seconds as an oscillator signal: solid orange oscillating temperature inside dashed orange envelopes, the mean Newton exponential as a white dashed line behind it, and an auto-zooming temperature axis"></canvas>
+          <div class="legend"><span><i class="sw" style="background:#c53d10"></i>T — actual, oscillating (oscillator signal)</span><span><i class="sw" style="background:repeating-linear-gradient(90deg,#c53d10 0 5px,transparent 5px 9px)"></i>Envelope — dashed orange</span><span><i class="sw" style="background-color:#3a3b36;background-image:repeating-linear-gradient(90deg,#ffffff 0 5px,transparent 5px 9px)"></i>Mean — Newton exponential, white dashed, behind</span></div>
+          <p class="sub" style="margin-top:10px;border:1.5px solid var(--heat);border-radius:8px;padding:8px 10px"><strong>Oscillator signal — do not miss this:</strong> the temperature signal on this tab <strong>is an oscillator signal</strong>, exactly as on the Water Level tab. The smooth mean / Newton exponential is a <strong>simplification</strong> of it: <strong>exponential = the oscillator's envelope / mean with the swing removed</strong>. Keep the envelope and the mean, drop the swing, and you get the exponential; put the swing back and you get the actual signal — the solid orange curve.</p>
+        </div>
+        <div class="gcard">
+          <h3>Normalised temperature distribution</h3>
+          <p class="sub">θ(z) = (T(z) − T<sub>bottom</sub>) / (T<sub>top</sub> − T<sub>bottom</sub>), heat entering from the top. Height runs along the x-axis and normalised temperature up the y-axis. One curve per setpoint; the current setpoint is bold. The right-hand axis reads the same height back as normalised height: 0 at the top (θ = 1), H at the bottom (θ = 0), and H/2 at θ(H/2) — not at 1/2, because the profile decays exponentially. Each curve crosses mid-height at a different θ, so the single H/2 label sits at the average of those crossings across all the curves.</p>
+          <canvas id="gDist" width="480" height="230" aria-label="Graph of normalised temperature on the vertical axis versus depth along the horizontal axis, for several setpoint temperatures, with a normalised height axis on the right showing 0, H/2 and H"></canvas>
+          <div class="legend" id="distLegend"></div>
+        </div>
+      </div>
+      <div class="graphs" style="margin-top:14px">
+        <div class="gcard" style="grid-column:1 / -1">
+          <h3>The Filter Model of Temperature Distributions</h3>
+          <p class="sub">The filter model (Bode-style) graph: the same θ curves, redrawn with height along the bottom on a plain linear scale — 0, H/2 and H evenly spaced, so H/2 sits at the halfway mark again instead of down at θ ≈ 0.29 — and normalised temperature θ moved to the right-hand axis, squished onto a log scale. The left-hand axis is the same θ on a plain linear scale, so the squishing on the right is visible against it. The curves are redrawn stretched to match that squishing: a pure exponential decay straightens into a straight line. Drawn over the curves is the Bode straight-line approximation, in heavy dashed lines: a horizontal segment along the top (θ = 1) up to the corner at H/2 — labelled <strong>cutoff point</strong> — then a straight downward segment after it. The lighter dashed lines are the chosen anchor point — H/2 along the bottom, and θ at H/2 on the right, averaged over all the curves (≈ 0.29) — and the dot on each curve is where that curve crosses H/2. Same colours as the graph above; the current setpoint is bold.</p>
+          <canvas id="gLogDist" width="960" height="230" aria-label="The filter model of temperature distributions: Bode-style graph of the normalised temperature distribution with height along the bottom on a linear scale, normalised temperature on a log-squished axis on the right and a linear theta axis on the left, with a dashed straight-line approximation — horizontal along the top to the labelled cutoff point at H/2, then straight down — drawn over the curves"></canvas>
+          <div class="legend"><span><i class="sw" style="background:#3e7cb1"></i>25 °C</span><span><i class="sw" style="background:#2e8b74"></i>30 °C</span><span><i class="sw" style="background:#7fae2e"></i>35 °C</span><span><i class="sw" style="background:#d9a404"></i>40 °C</span><span><i class="sw" style="background:#e06a1b"></i>45 °C</span><span><i class="sw" style="background:#c22e10"></i>50 °C</span><span><i class="sw" style="background:repeating-linear-gradient(90deg,var(--ink) 0 5px,transparent 5px 9px)"></i>Bode straight-line approximation — cutoff point at H/2</span></div>
+        </div>
+      </div>
+
+      <h2 class="sec">Equations</h2>
+      <div class="eqs">
+        <h3>General</h3>
+        <p>Heat conduction in the air: &nbsp; ∂<i>T</i>/∂<i>t</i> = α ∇<sup>2</sup><i>T</i>, &nbsp; with &nbsp; α = <i>k</i> / (ρ <i>c<sub>p</sub></i>)</p>
+        <p>Lumped tank (one mean temperature): &nbsp; <i>C</i> d<i>T</i>/d<i>t</i> = η<i>P</i>(<i>t</i>) − (<i>T</i> − <i>T<sub>s</sub></i>)·(<i>UA</i>)<sub>eff</sub></p>
+        <p>Transient after a step in setpoint: &nbsp; <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> + (<i>T</i><sub>0</sub> − <i>T<sub>s</sub></i>) <i>e</i><sup>−<i>t</i>/τ</sup>, &nbsp; τ = <i>C</i> / (<i>UA</i>)<sub>eff</sub></p>
+        <p>Normalised response: &nbsp; θ(<i>t</i>) = (<i>T</i> − <i>T</i><sub>0</sub>) / (<i>T<sub>s</sub></i> − <i>T</i><sub>0</sub>) = 1 − <i>e</i><sup>−<i>t</i>/τ</sup> &nbsp; <span class="n">(≈ 63% at t = τ, ≈ 98% at t = 4τ — the damped oscillations of the full response are neglected, leaving the exponential)</span></p>
+        <p>Vertical profile (z measured down from the panel): &nbsp; θ(<i>z</i>) = (<i>T</i>(<i>z</i>) − <i>T<sub>b</sub></i>) / (<i>T<sub>p</sub></i> − <i>T<sub>b</sub></i>) = (<i>e</i><sup>−<i>z</i>/δ</sup> − <i>e</i><sup>−<i>H</i>/δ</sup>) / (1 − <i>e</i><sup>−<i>H</i>/δ</sup>) &nbsp; <span class="n">(so θ = 1 at the panel and θ = 0 at the bottom, z = H)</span></p>
+        <p>Sealed, rigid tank (ideal gas): &nbsp; <i>p</i> / <i>p</i><sub>0</sub> = <i>T</i> / <i>T</i><sub>0</sub> &nbsp; <span class="n">(temperatures in kelvin — pressure follows the temperature transient)</span></p>
+
+        <h3>With this geometry</h3>
+        <p>Volume: &nbsp; <i>V</i> = 0.600 × 0.300 × 0.300 = 0.0540 m<sup>3</sup> &nbsp; (54.0 L)</p>
+        <p>Air mass: &nbsp; <i>m</i> = ρ<i>V</i> = 1.204 × 0.0540 ≈ 0.0650 kg &nbsp; <span class="n">(at 20 °C)</span></p>
+        <p>Heat capacity of the air: &nbsp; <i>C</i> = <i>m c<sub>p</sub></i> = 0.0650 × 1005 ≈ 65 J/K</p>
+        <p>Panel area &amp; power density: &nbsp; <i>A<sub>p</sub></i> = 0.300 × 0.200 = 0.0600 m<sup>2</sup>, &nbsp; <i>P</i>/<i>A<sub>p</sub></i> = 24 / 0.0600 = 400 W/m<sup>2</sup></p>
+        <p>Thermal diffusivity of air: &nbsp; α = 0.0263 / (1.204 × 1005) ≈ 2.2 × 10<sup>−5</sup> m<sup>2</sup>/s</p>
+        <p>Model time constant: &nbsp; τ<sub>eff</sub> = 24 s &nbsp; <span class="n">(effective lumped value used in the live graph — a step settles in ≈ 4τ ≈ 96 s, inside the 100 s window)</span></p>
+        <p>Profile depth scale: &nbsp; δ/<i>H</i> = 0.35 + 0.012·(<i>T<sub>s</sub></i> − 20) &nbsp; <span class="n">(H = 0.300 m; a hotter panel drives heat deeper, so δ grows with setpoint — the curves in the distribution graph)</span></p>
+      </div>
+
+      <h2 class="sec">Note — how the heating works</h2>
+      <div class="letter">
+        <div class="toc">
+          <p class="t">Contents</p>
+          <ol>
+            <li><a href="#note-pad">How the heating pad works</a></li>
+            <li><a href="#note-particles">Particles first — temperature is motion</a></li>
+            <li><a href="#note-boltzmann">The Boltzmann distribution</a> — Simplifications 1 &amp; 2</li>
+            <li><a href="#note-newton">Newton's law of cooling</a></li>
+            <li><a href="#note-solve">The differential equation, solved</a></li>
+            <li><a href="#note-fourier">Expanding into Fourier — heat as a flow</a></li>
+            <li><a href="#note-position">Adding position — the distribution down the height</a> — Simplification 3</li>
+            <li><a href="#note-3d">The real geometry in 3D — for later</a></li>
+            <li><a href="#note-filter">The filter model of temperature distributions</a></li>
+            <li><a href="#note-vocabulary">Towards system models — signals, filters, and the vocabulary</a></li>
+            <li><a href="#note-system">System diagram — temperature over time at position x</a></li>
+          </ol>
+        </div>
+        <p>This is the simplest terrarium model. A heating panel on top, and one variable: temperature. The terrarium is empty and sealed, with just air inside — and the job is to model how the heat distributes through that air.</p>
+        <p>Watch for the <strong>three simplifications</strong>, highlighted where they happen: <strong>1</strong> — a set of particles becomes a Boltzmann distribution. <strong>2</strong> — that distribution becomes a single average temperature. <strong>3</strong> — the transient is ignored and only the steady state is kept, but only when that is applicable — when a variable, here temperature, is held constant.</p>
+
+        <h3 id="note-pad">1. How the heating pad works</h3>
+        <p>The pad converts electrical energy into heat: current pushed through a resistive element (Joule heating) warms the panel, and the thermostat holds its surface at the setpoint temperature, <i>T</i><sub>heating pad</sub> — the temperature you set with the slider, also written <i>T<sub>s</sub></i> in the simple solution. We assume the heat is spread <strong>uniformly</strong> over the panel surface, and from that surface it radiates and conducts downward into the air. For now we follow the heat in <strong>one direction only</strong> — straight down. The pad is inset from the edges of the terrarium, so a full picture would need heating in three dimensions; that is left for later (section 8).</p>
+
+        <h3 id="note-particles">2. Particles first — temperature is motion</h3>
+        <p>The air is a huge number of tiny particles, all moving and bouncing — off the glass, off the panel, off each other. <strong>Temperature is average particle motion:</strong> hotter air just means its particles are, on average, moving faster.</p>
+        <p class="f">(1/2)<i>m</i>⟨<i>v</i><sup>2</sup>⟩ = (3/2) <i>k<sub>B</sub> T</i></p>
+        <p>When a slower air particle bounces off the hot panel surface, it tends to leave faster than it arrived — the bounce hands it energy. Collisions then share that extra motion through the tank. Heat entering the tank <em>is</em> this: faster bounces at the top, spreading downward.</p>
+        <div class="fig">
+          <canvas id="particleCanvas" class="particles" width="640" height="280" role="img" aria-label="Diagram of air particles flying around inside an empty terrarium with nothing but air: particles bounce off the glass, off each other and off the heating panel on top, faster particles drawn warmer in colour, particle speed following the temperature slider"></canvas>
+          <p class="figcap">Particles in the terrarium — nothing but air. Every dot is one air particle, coloured by its speed (blue = slow, orange/red = fast). Particles bounce off the glass and off the heating panel on top; a bounce off the hot panel hands a slow particle energy, so it leaves faster than it arrived. Move the temperature slider at the top of the tab and the whole swarm speeds up or slows down.</p>
+        </div>
+
+        <h3 id="note-boltzmann">3. The Boltzmann distribution</h3>
+        <p>Not every particle moves at the average speed. At any instant some are nearly still, most are in the middle, a few are racing. Temperature fixes the <em>shape of the spread</em> of speeds — the Boltzmann distribution. The chance of finding a particle with energy <i>E</i> falls off exponentially:</p>
+        <p class="f"><i>P</i>(<i>E</i>) ∝ <i>e</i><sup>−<i>E</i> / (<i>k<sub>B</sub> T</i>)</sup></p>
+        <p>Raise <i>T</i> and the spread shifts to higher speeds and broadens — the fast tail grows.</p>
+        <div class="fig">
+          <div class="figrow">
+            <div>
+              <p class="boltz-title">Speeds — Maxwell–Boltzmann distribution <span class="sub2">probability density vs particle speed</span></p>
+              <canvas id="gBoltzSpeed" width="480" height="240" role="img" aria-label="Graph of the Maxwell-Boltzmann speed distribution for air particles at several temperatures: probability density against particle speed in metres per second, the peak moving right and the curve broadening and flattening as temperature rises"></canvas>
+            </div>
+            <div>
+              <p class="boltz-title">Energies — Boltzmann distribution <span class="sub2">probability density vs particle energy</span></p>
+              <canvas id="gBoltzEnergy" width="480" height="240" role="img" aria-label="Graph of the Boltzmann energy distribution for air particles at several temperatures: probability density against particle energy in electron volts, the exponential tail growing fatter as temperature rises"></canvas>
+            </div>
+          </div>
+          <div class="legend" id="boltzLegend"></div>
+          <p class="figcap">The Boltzmann distribution at each setpoint — same colours as the distribution graphs at the top of the tab, current setpoint bold. Left: how particle speeds are spread out. Few particles are near still, most sit around the peak, and a long fast tail runs off to the right; the dashed line marks the average speed, ⟨<i>v</i>⟩. Right: the same spread by energy — the chance of a particle carrying energy <i>E</i> falls off as <i>e</i><sup>−<i>E</i>/(<i>k<sub>B</sub> T</i>)</sup>, and the dashed line marks the average energy, (3/2)<i>k<sub>B</sub> T</i>. Raise <i>T</i> and both curves shift right, broaden and flatten, and the fast / high-energy tail grows — that tail is the part of the swarm in the particle diagram above drawn orange and red.</p>
+        </div>
+        <p><strong>What “the average” means — it is an integral.</strong> When we say we take the average of the Boltzmann distribution, we do not read a single value off the curve. We add up <em>every</em> energy a particle could have, each one weighted by how likely the distribution says it is, over the whole curve — and that weighted sum is an integral. The brackets ⟨ ⟩ in this note mean exactly that integral average:</p>
+        <p class="f">⟨<i>E</i>⟩ = ∫<sub>0</sub><sup>∞</sup> <i>E</i> · <i>P</i>(<i>E</i>) d<i>E</i> = (3/2) <i>k<sub>B</sub> T</i></p>
+        <p>The distribution is normalised — its weights add to one, ∫ <i>P</i>(<i>E</i>) d<i>E</i> = 1 — so ⟨<i>E</i>⟩ is the balance point of the whole curve: every part of it counts, in proportion to its weight. The same integral over the speed curve gives ⟨<i>v</i><sup>2</sup>⟩, and it is that, through (1/2)<i>m</i>⟨<i>v</i><sup>2</sup>⟩ = ⟨<i>E</i>⟩ in section 2, that sets <i>T</i>. So yes: the average energy is got by integrating, and it is the energy of that average — the mean energy itself — that we then use. The whole spread goes in; one number, ⟨<i>E</i>⟩, comes out; and that number is the temperature.</p>
+        <p><strong>Not the peak, not the midpoint, not the maximum.</strong> The peak of the speed curve is only the <em>most probable</em> speed — the single speed with the most particles near it — and it is not the average: on the left-hand graph the dashed ⟨<i>v</i>⟩ line sits to the <em>right</em> of the peak, because the long fast tail pulls the integral average up even though few particles live out there. There is no midpoint to take instead: the energy curve starts at 0 and tails off without ever quite ending, so it has no middle value — and no maximum either; the tail just gets thinner and thinner. And because energy goes as <i>v</i><sup>2</sup>, that tail counts for more than its particle count suggests. One more consequence of averaging by integral: what we average is the <em>energies</em>, so ⟨<i>E</i>⟩ = (1/2)<i>m</i>⟨<i>v</i><sup>2</sup>⟩ — which is <em>not</em> the energy of the average speed, (1/2)<i>m</i>⟨<i>v</i>⟩<sup>2</sup>. That comes out smaller, because averaging first and squaring afterwards throws away exactly the spread the integral keeps. Average the energies first — then the average energy is the temperature. The peak and the maximum never enter it.</p>
+        <p><strong>And not the amplitude of the oscillator.</strong> These are two different averagings, at two different steps, and they are easy to mix up. The Boltzmann average is taken <em>across particles, at one instant</em>: thousands of different energies collapse, by the integral, into the one number <i>T</i>. The oscillator comes afterwards: that one number then varies <em>in time</em>, swinging around its setpoint while the tank settles, as the live graph at the top of this tab shows. The integral average is the <em>centre line</em> the oscillator swings around — its mean — not the size of its swing. The amplitude is a separate quantity: how far <i>T</i> departs from that centre before settling. Reading a point of the Boltzmann curve — its midpoint, or any other single point — off as an amplitude would mix the two steps together: the distribution is a spread over particles, the amplitude is a swing over time.</p>
+        <p><strong>The Fourier comparison.</strong> The comparison to Fourier is close, and it is worth saying exactly where it holds. A Boltzmann distribution and a frequency spectrum are the same <em>kind</em> of object: a curve that says how much weight sits at each value of something — here, how many particles at each energy; in Fourier's picture, how much of a signal at each frequency. And energy and frequency are genuinely linked — for a wave, <i>E</i> grows in proportion to <i>f</i>, and for light the link is exact, <i>E</i> = <i>hf</i> — so an energy distribution can fairly be read as a kind of spectrum. To rebuild a time-domain signal from a spectrum you use <em>all</em> of it: every frequency component added back together, each with its weight — again an integral, over frequencies instead of energies. Simplification 2 below does the opposite job with the same tool: instead of keeping the whole spectrum in order to rebuild something from it, it uses the integral to collapse the whole distribution down to its one weighted average, ⟨<i>E</i>⟩, and throws the shape of the spread away. One number survives — the average energy, not the maximum, not the peak — and that number is what we call the temperature and feed to everything that follows.</p>
+        <div class="simp">
+          <p class="tag">Simplification 1 — Particles → Boltzmann distribution</p>
+          <p>Instead of tracking every particle and every bounce, we replace the whole set of particles with one Boltzmann distribution: a smooth curve for how the speeds are spread out.</p>
+        </div>
+        <div class="simp">
+          <p class="tag">Simplification 2 — Boltzmann distribution → Average temperature</p>
+          <p>From that whole spread we then take just the average — the average kinetic energy — and that average is the temperature: one number, <i>T</i>, standing in for the entire distribution. And “average” here means the integral average worked out above, ⟨<i>E</i>⟩ = ∫ <i>E</i> · <i>P</i>(<i>E</i>) d<i>E</i> — the whole curve collapsed to its weighted mean energy — not its peak, not a midpoint read off it, and not an oscillator amplitude.</p>
+        </div>
+
+        <h3 id="note-newton">4. Newton's law of cooling</h3>
+        <p>Now the exchange between the pad and the air. The intuition behind Newton's law of cooling is that <strong>the rate of heat exchange is proportional to the temperature difference</strong> — the bigger the gap between pad and air, the faster heat flows — times a constant that bundles up the contact area, the air's mass and its heat capacity:</p>
+        <p class="f">rate of heat exchange ∝ (<i>T</i><sub>heating pad</sub> − <i>T</i>)</p>
+
+        <h3 id="note-solve">5. The differential equation, solved</h3>
+        <p>Written as a differential equation for the air temperature <i>T</i>, with <i>T<sub>s</sub></i> the setpoint (the pad temperature):</p>
+        <p class="f">d<i>T</i>/d<i>t</i> = <i>k</i>·(<i>T<sub>s</sub></i> − <i>T</i>)</p>
+        <p>Solved, it gives the transient you see in the live graph above:</p>
+        <p class="f"><i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T</i><sub>0</sub>)·<i>e</i><sup>−<i>kt</i></sup></p>
+        <p>Fast change while the gap is big, slowing as the air closes in on the pad temperature, settling exponentially. This holds in both directions — heating up and cooling down are the same gap closing, from opposite sides.</p>
+        <div class="simp">
+          <p class="tag">The temperature signal is an oscillator signal — the exponential is its simplification</p>
+          <p>The temperature signal here <strong>is an oscillator signal</strong> — the same vocabulary as the Water Level system. The live graph at the top of this tab now shows it in full: the <strong>solid orange</strong> curve is the actual signal, swinging around the setpoint inside its <strong>dashed orange envelope</strong> as it settles. The smooth exponential solved above — drawn on that graph as the <strong>white dashed</strong> line, behind everything — is its <strong>mean</strong>, and it is a <strong>simplification</strong>: <strong>exponential = the oscillator's envelope / mean with the swing removed</strong>. Keep the envelope and the mean and drop the swing and you get the exponential; the underlying signal is still the oscillator.</p>
+        </div>
+
+        <h3 id="note-fourier">6. Expanding into Fourier — heat as a flow</h3>
+        <p>Newton's law tracks one temperature in time. Fourier's analysis of heat goes further: heat is a <em>flow</em> through the air itself, driven by how temperature changes from place to place. That gives the heat equation:</p>
+        <p class="f">∂<i>T</i>/∂<i>t</i> = α ∂<sup>2</sup><i>T</i>/∂<i>z</i><sup>2</sup>, &nbsp; α = <i>k</i> / (ρ<i>c<sub>p</sub></i>)</p>
+
+        <h3 id="note-position">7. Adding position — the distribution down the height</h3>
+        <p>To get the distribution along the height — the second graph above — we add a second variable besides the temperature difference: <strong>position <i>z</i></strong>, measured down from the panel. The temperature is now <i>T</i>(<i>z</i>, <i>t</i>), not one number, and its steady shape is the normalised profile θ(<i>z</i>) in the equations above.</p>
+        <div class="simp">
+          <p class="tag">Simplification 3 — Transient → Steady state only</p>
+          <p>We can ignore the transient and look at the steady state only — <strong>but only when it is applicable</strong>: only when a variable is held constant long enough for the transient to die away. Here that variable is temperature, held at the setpoint by the thermostat. Move the slider and the transient is real again until it settles.</p>
+        </div>
+
+        <h3 id="note-3d">8. The real geometry in 3D — for later</h3>
+        <p>Everything above follows heat in one direction, straight down. The real pad is inset from the terrarium walls, so heat also spreads sideways, and a full picture needs the actual 3D geometry. That is its own step, for later — it does not change the one-direction story, it completes it.</p>
+
+        <h3 id="note-filter">9. The filter model of temperature distributions</h3>
+        <p><strong>What a Bode plot is.</strong> A Bode plot is a way of drawing how a system responds, using a log scale so that a response which curves on an ordinary plot can be read as straight lines. It is the standard plot for filters: how much of a signal gets through, drawn against frequency on a log scale. Its useful trick is the straight-line approximation — instead of drawing the smooth curve exactly, you approximate it as two straight lines: a horizontal line where the signal passes, then, at one corner point, a straight downward line where it is cut off and falls away. That corner is the <strong>cutoff point</strong>.</p>
+        <p><strong>How we get this one.</strong> Start with the temperature distribution we already have — normalised temperature θ against height, from the panel at the top down to the bottom of the tank. That distribution decays exponentially with height. Now redraw it the Bode way: height along the bottom on a plain linear scale, and θ on a log scale — that redrawn graph, titled <em>The Filter Model of Temperature Distributions</em> above, is our Bode plot, with height in place of frequency. On it, the straight-line approximation is drawn over the actual curves as heavy dashed lines: horizontal along the top up to H/2, then straight down — and the corner where those two dashed lines meet is labelled <strong>cutoff point</strong>.</p>
+        <p><strong>The log scaling — why it is used, and what it does to the curve.</strong> On a linear scale the exponential distribution bunches up: most of the change happens near the top, the rest is squashed into the bottom, and H/2 does not sit at the halfway mark — it falls down near θ ≈ 0.29. The log scale is used because of one fact: <strong>the log of an exponential is a straight line</strong>. Put θ on a log scale and the exponential curve is stretched out and straightened — equal ratios take equal space instead of equal differences, so the bunched-up low end opens out, the curve straightens toward a line, height reads evenly again on its linear scale, and H/2 sits back at its proper halfway place. That straightening is exactly what makes the two-straight-lines Bode approximation possible.</p>
+        <p><strong>Distance acts as a filter.</strong> Getting a Bode plot out of the temperature distribution suggests reading the distribution itself as a filter — and that is the filter model: <strong>distance acts as a filter for temperature</strong>. The temperature at the panel is the signal going in, at full strength. Travelling down through the air, it is progressively attenuated: near the top, close to the panel, it passes nearly whole; further down, less and less of it gets through, and only the smoothed, weakened remainder reaches the bottom. That is a <strong>low-pass filter</strong> — pass at the top, cut off at the cutoff point, attenuated below — with distance down the tank doing the filtering, in place of frequency.</p>
+        <p><strong>Is it backwards? — and how accurate is it?</strong> It can look backwards. The Bode version drawn here sits flat at full heat first, and only starts falling after the cutoff point — where the plainer expectation is a line falling steadily from the top: a linear relationship decreasing to H/2, and then a separate line for the rest below it. That plainer reading is a real version too — it is the simplest linear version drawn in the figure below, and the two drawings are cousins: both are two straight pieces meeting at H/2, one flat-then-falling, the other falling-then-falling-differently. On the log scale the flat-then-down version makes sense: the log straightens the exponential, and the Bode convention is to draw that straightened response as a flat pass line that breaks at the cutoff point into its downward run. So the model stays as it is — but it has to be said plainly that as a picture of the actual distribution it is <strong>really inaccurate</strong>. It is a <strong>symbolic</strong> simplification, and that is what it is for: drawing a block diagram and saying, symbolically, that this is a linear Bode plot of a low-pass filter — a simple graph that stands for the distribution, not a measurement of it. The exponential is the accurate version; the Bode lines are the symbol we draw.</p>
+        <p>So the temperature distribution <em>is</em> the low-pass filter model: the distribution down the height of the tank, in <strong>one direction only — straight down</strong>, read as a signal passing through a filter whose strength runs out with distance. The smooth exponential curves are the actual response; the two dashed straight lines are its Bode approximation.</p>
+        <div class="fig">
+          <canvas id="gFilterNote" width="640" height="240" role="img" aria-label="Graph of the filter distribution again: normalised temperature against height down the tank, showing the simplest version — top half of the tank at full heat, then a linear filter falling from H/2 to the bottom — the linear steady-state version, the more accurate exponential curve, and the dashed Bode two-straight-lines approximation breaking at the cutoff point at H/2"></canvas>
+          <p class="figcap">The filter distribution again, with its versions side by side. <strong>Simplest version:</strong> the top half of the tank sits at full heat (θ = 1) down to H/2, then a <strong>linear filter</strong> falls in a straight line from H/2 to the bottom. The <strong>exponential</strong> curve is the more accurate version of the same distribution — full at the panel, decaying smoothly all the way down. The dashed pair of straight lines is the <strong>Bode approximation</strong> of that exponential: flat, then the <strong>cutoff point</strong> at H/2, then straight down. If the temperature changes, the whole distribution travels through a <strong>transient in time</strong> before it settles onto the new curve. For a simple distribution we can simplify to the linear steady state and the Bode version — but for the simulator it is just as well to use the <strong>exponential model</strong> and not simplify to the Bode filter, to be more accurate. The Bode filter earns its place in the <strong>block diagrams and system diagrams</strong>, where a simple representation is what we want.</p>
+        </div>
+
+        <h3 id="note-vocabulary">10. Towards system models — signals, filters, and the vocabulary</h3>
+        <p><strong>Why this matters.</strong> The point of modelling this one simple system carefully is that the goal is to make system models for other things later — ecological things included. On the heating-panel system we picked, we can now say we have the system modelled quite well using a low-pass filter: the panel puts a temperature signal in at the top, and distance down the tank attenuates it in exactly the way the filter model describes. That is an interesting parallel into electronics, and parallels like it are a real way in: the spring we used elsewhere is a mechanical model, a spring's charging and settling can also be compared to a capacitor charging in a circuit, and a filter here is the same shape of idea as a filter in electronics. The same ecological concept can often be reached through a mechanical parallel, an electrical parallel, or a thermodynamic one.</p>
+        <p><strong>But the classification is our own.</strong> We do not want to classify system diagrams for ecology only by borrowing the parallel — always calling things by their electronics or mechanics name. So we keep the parallel as a parallel, and give the thing in front of us its own name. This filter is not, for our purposes, an electronic low-pass filter: it is a filter made of air, distance and heat, so we call it a <strong>thermodynamic filter</strong>. And the spring is not, for our purposes, just a mechanical spring: what matters in the diagram is the kind of signal it produces — a swing around a target that settles — so we call it an <strong>oscillator</strong>.</p>
+        <p>That gives us our first two classifications for system diagrams, and a first subclass. The definitions below are the vocabulary this note concludes with — the words we will use from here on.</p>
+        <p><strong>Signal</strong> — a quantity that carries change through a system: it has a value that varies — with time, with position, or with both — and a system diagram is, in large part, a picture of what happens to its signals. The temperature at the panel, and the temperature at each height below it, is a signal. Signals are classified by the shape of that variation.</p>
+        <p><strong>Filter</strong> — a part of a system that a signal passes through and is changed by: part of the signal gets through, part is attenuated or held back, so the signal that comes out is a reshaped version of the signal that went in. A filter is classified by what it lets through and what it cuts off, and by where its cutoff point falls.</p>
+        <p><strong>Thermodynamic filter</strong> — our name, for system diagrams, for a filter whose filtering is done by a thermodynamic process rather than by an electronic component. This note's example is the first one: distance through air acting on temperature — passing nearly whole near the panel, breaking at the cutoff point, and attenuating with distance below it. In electronics language it is modelled well as a low-pass filter; in our classification it is a thermodynamic filter.</p>
+        <p><strong>Oscillator</strong> — the first subclass of signal. An oscillator is a signal that swings around a target or equilibrium value — overshooting it, coming back, and, if it is damped, settling onto it in swings that get smaller. The spring model produces an oscillator: a mechanical spring is the parallel that got us there, and a capacitor charging and discharging is an electrical parallel for the same kind of settling behaviour, but the classification names the signal, not the parallel. Many of the signals we will deal with will be oscillators.</p>
+        <div class="fig">
+          <canvas id="gOscNote" width="640" height="240" role="img" aria-label="Graph of what an oscillator is: a signal in time swinging above and below its target value, each swing smaller, inside a dashed decaying envelope, settling onto the target; the dashed mean through it is the exponential simplification with the swing removed"></canvas>
+          <p class="figcap">What an oscillator is. The solid curve is the signal in time: it swings above and below its <strong>target</strong>, each swing smaller than the last, caged by the dashed <strong>envelope</strong>, until it settles on the target. The dashed line through the middle is its <strong>mean</strong> — keep the mean and the envelope and drop the swing, and the oscillator simplifies to the exponential.</p>
+        </div>
+        <div class="fig">
+          <canvas id="gInteractNote" width="640" height="240" role="img" aria-label="Graph of how a filter and an oscillator interact to produce a new signal: on the left an oscillator signal in time at the panel, in the middle the filter distribution down the height with a point marked at depth, and on the right the new signal — temperature at that point — a smaller, later oscillator in time, attenuated by the filter at that depth"></canvas>
+          <p class="figcap">How filters and oscillators interact, to produce a new signal. Left: the input is an <strong>oscillator in time</strong> — the temperature at the panel, swinging as it settles. Middle: that signal travels down through the <strong>filter</strong> — the distribution with height — and at any chosen depth the filter passes only part of it. Right: what comes out at that depth is a <strong>new signal — the temperature at a point</strong>: still an oscillator in time, but smaller (attenuated by the filter at that depth) and later (the swing takes time to travel down). Temperature at a point = oscillator (in time) × filter (in space), read at one depth.</p>
+        </div>
+        <p><strong>The temperature signal in this note is an oscillator.</strong> That applies here, on the air-only system, just as it does in the Water Level system: the actual temperature swings around the setpoint and settles, as the live graph at the top of this tab shows in solid orange inside its dashed orange envelope. Where this note draws that signal as a smooth <strong>exponential</strong> — the white dashed mean on the live graph, and the solution <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T</i><sub>0</sub>) <i>e</i><sup>−<i>kt</i></sup> in section 5 — that exponential is a <strong>simplification of the oscillator</strong>: it is the oscillator's envelope / mean with the swing removed, not a different kind of signal.</p>
+        <p><strong>Linear signal</strong> — another kind of signal, for contrast: a signal whose variation is proportional and straight-line — double the input and you double the change, with no swing around a target and no cutoff. Not every signal is an oscillator; some may be linear, and the diagram should say which kind it is dealing with.</p>
+        <p><strong>Signal converter — <span class="f">C<sub>S</sub></span></strong> — a block in a system diagram that takes a signal in one form and puts it out in a simpler form: it changes the <em>kind</em> of signal, not where the signal is going. Its symbol is <strong><span class="f">C<sub>S</sub></span></strong>. Our first signal converter is the step this note has been using all along without drawing it: <strong>oscillator signal in, exponential signal out</strong>. It keeps the oscillator's envelope and mean and drops the swing — the simplifications above, done as one step and drawn as one block, so the block is called a <strong>signal converter block</strong>. The conversion is something <em>we</em> do to the signal, so the rest of the diagram can work with a simple signal; it is not a process happening in the tank.</p>
+        <p>That ordering matters, and the diagrams below are drawn in that order. In a block diagram we will know that the true signal is an oscillator, and that the shape drawn for it is not the true shape — the simplification process is exactly what turns the oscillator into the simple signal. So the chain is drawn honestly: the oscillator goes into the <strong>signal converter (<i>C<sub>S</sub></i>)</strong> first, the converter outputs the <strong>exponential signal</strong>, and <strong>distance — the thermodynamic filter, a transform / mixer (⊗) — acts on that simplified signal</strong>, not on the raw oscillator. What the filter outputs is the temperature over time at a position: <i>T</i>(<i>x</i>, <i>t</i>).</p>
+        <p><strong>Transform — also called a mixer</strong> — an operation that takes a signal, or a response, in one form and gives it in another form. Calling it a <strong>mixer</strong> can be clearer: a mixer combines its inputs as a <strong>product</strong>. Filters can be classified as transforms — as mixers: a filter takes the signal that goes in and transforms / mixes it into the reshaped signal that comes out, so a filter is one kind of transform / mixer — the kind that does its transforming by passing part of the signal and attenuating the rest. For transform / mixer processes we use the <strong>mixer symbol: a circle with a × in it — ⊗</strong>.</p>
+        <p><strong>Converter notation — <span class="f">C</span> with a subscript.</strong> Any converter starts with a capital <strong><span class="f">C</span></strong> for converter, with a subscript saying what it is converting: <strong><span class="f">C<sub>S</sub></span></strong> for a signal converter, <strong><span class="f">C<sub>T</sub></span></strong> for a transform converter. So any converter is written <span class="f">C<sub>—</sub></span>, the subscript naming what it converts.</p>
+        <p><strong>Transform converter — <span class="f">C<sub>T</sub></span></strong> — a block in a system diagram that takes a transform in one form and puts it out in another form: it changes the <em>form of the transform — the form of the response</em>, not the kind of signal. Its symbol is <strong><span class="f">C<sub>T</sub></span></strong>. That is what separates it from a signal converter (<span class="f">C<sub>S</sub></span>): a signal converter changes the kind of signal (oscillator in, exponential signal out), while a transform converter changes the form a response is drawn in. Our first transform converter is the <strong>Bode transform converter</strong>: it takes the exponential filter of distance — the filter's normal response — and turns it into a linear one, its <strong>Bode response</strong>. The filtering itself does not change; only the form it is drawn in changes, from the normal response to the Bode response.</p>
+        <p><strong>Mixer symbol (⊗) vs adder symbol (⊕).</strong> For transform / mixer processes we use the mixer symbol — <strong>a circle with a × in it, ⊗</strong> — a product. Where signals are <em>added</em> instead — like where we add the transient state in with the output of the position distribution filter / transform / mixer — we use the circle with a <strong>+</strong> in it before it — <strong>⊕</strong>. Product gets ⊗; addition gets ⊕.</p>
+        <p>So, to fix the vocabulary: we have two classifications — <strong>signals</strong> and <strong>filters</strong>. Under signals, our first subclass is the <strong>oscillator</strong> — and the temperature signal here is one, its exponential form a simplification with the swing removed. Between a signal and a filter we now also have a block: the <strong>signal converter, <span class="f">C<sub>S</sub></span></strong>, which turns an oscillator signal into the simplified exponential that the filter then acts on. And the heating-panel temperature distribution, modelled well as a low-pass filter, is classified here as a <strong>thermodynamic filter</strong>. Filters can also be classified as <strong>transforms — also called mixers, symbol ⊗</strong>, and after the filter we now also have a second kind of converter block: the <strong>transform converter, <span class="f">C<sub>T</sub></span></strong> — here the <strong>Bode transform converter</strong>, which turns the filter's normal response into its Bode response. Any converter is <span class="f">C</span> with a subscript for what it converts: <span class="f">C<sub>S</sub></span>, <span class="f">C<sub>T</sub></span>.</p>
+      </div>
+
+      <h2 class="sec" id="note-system">System diagram — temperature over time at position x</h2>
+      <div class="letter">
+        <p>The system above, drawn as a block diagram — with the signal converter drawn in, before the filter, as defined in section 10. The input signal is an oscillator, so it goes into the <strong>signal converter, <i>C<sub>S</sub></i></strong> first: oscillator in, <strong>exponential signal</strong> out. That simplified exponential is what the distance filter — the thermodynamic filter, a transform / <strong>mixer, ⊗</strong> — acts on: the filter is a transform process, so it uses the mixer symbol, a product. In the word version below, the filter's output then goes through the <strong>Bode transform converter, <i>C<sub>T</sub></i></strong>: the signal goes from a normal response to a <strong>Bode response</strong>, and that becomes the steady-state part of the output; the transient state runs on a side branch and <strong>adds</strong> in to the output at the circle with a + before it — <strong>⊕</strong>. The output is the <strong>temperature over time at position <i>x</i></strong> — <i>T</i>(<i>x</i>, <i>t</i>). Two versions: word labels first, then the same diagram with graphs in place of the words — in the graph version the transform converter block is ignored, and the Bode graph is just drawn.</p>
+        <h3>Version 1 — word labels</h3>
+        <div class="fig">
+          <svg viewBox="0 0 960 260" role="img" aria-label="Block diagram with word labels: input signal — temperature at the panel, an oscillator — flows into the signal converter C subscript S, which outputs the exponential signal; that exponential flows into the thermodynamic filter — a transform, also called a mixer, shown with the mixer symbol, a circle with a cross in it, a product — distance down the tank — whose output, the normal response, flows into the Bode transform converter C subscript T, which turns the exponential filter of distance into a linear Bode response; that Bode response is the steady-state distribution at position x, which flows into a summing point, a circle with a plus in it, an adder; a side branch below carries the transient state — the travel in time after a temperature change — into the same summing point, adding in; the sum flows out as the output — temperature over time at position x, T of x t">
+            <defs>
+              <marker id="arrW" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
+            </defs>
+            <g font-size="10.5" fill="var(--muted)" text-anchor="middle">
+              <text x="126" y="42">oscillator</text>
+              <text x="276" y="42">exponential signal</text>
+              <text x="426" y="42">normal response</text>
+              <text x="586" y="42">Bode response</text>
+            </g>
+            <g font-size="12.5" fill="var(--ink)" text-anchor="middle">
+              <rect x="6" y="52" width="110" height="64" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="61" y="78" font-weight="700" font-size="12">INPUT SIGNAL</text>
+              <text x="61" y="96" font-size="11.5">Temp. at the panel</text>
+              <text x="61" y="110" font-size="11.5">(oscillator)</text>
+              <rect x="136" y="52" width="130" height="64" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="201" y="78" font-weight="700" font-size="11">C<tspan baseline-shift="sub" font-size="8">S</tspan> — SIGNAL CONVERTER</text>
+              <text x="201" y="96" font-size="11.5">oscillator in</text>
+              <text x="201" y="110" font-size="11.5">exponential out</text>
+              <rect x="286" y="52" width="130" height="64" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="351" y="76" font-weight="700">FILTER <tspan font-size="16">⊗</tspan></text>
+              <text x="351" y="94" font-size="11">Thermodynamic filter</text>
+              <text x="351" y="108" font-size="11.5">mixer · product · distance</text>
+              <rect x="436" y="52" width="140" height="64" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="506" y="76" font-weight="700" font-size="10.5">C<tspan baseline-shift="sub" font-size="7.5">T</tspan> — TRANSFORM CONVERTER</text>
+              <text x="506" y="94" font-size="10.5">Bode transform converter</text>
+              <text x="506" y="108" font-size="11">exponential → linear</text>
+              <rect x="596" y="52" width="110" height="64" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="651" y="78" font-weight="700" font-size="12">STEADY STATE</text>
+              <text x="651" y="96" font-size="11.5">Bode response at</text>
+              <text x="651" y="110" font-size="11.5">position x</text>
+              <circle cx="738" cy="84" r="15" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+              <text x="738" y="90" font-size="16" font-weight="700">+</text>
+              <rect x="596" y="170" width="110" height="56" rx="6" fill="var(--panel)" stroke="var(--heat)" stroke-width="1.6"/>
+              <text x="651" y="194" font-weight="700" font-size="11" fill="var(--heat)">TRANSIENT STATE</text>
+              <text x="651" y="211" font-size="10.5">travel in time after</text>
+              <text x="651" y="224" font-size="10.5">a temperature change</text>
+            </g>
+            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
+              <line x1="116" y1="84" x2="132" y2="84" marker-end="url(#arrW)"/>
+              <line x1="266" y1="84" x2="282" y2="84" marker-end="url(#arrW)"/>
+              <line x1="416" y1="84" x2="432" y2="84" marker-end="url(#arrW)"/>
+              <line x1="576" y1="84" x2="592" y2="84" marker-end="url(#arrW)"/>
+              <line x1="706" y1="84" x2="719" y2="84" marker-end="url(#arrW)"/>
+              <line x1="753" y1="84" x2="768" y2="84" marker-end="url(#arrW)"/>
+            </g>
+            <g stroke="var(--heat)" stroke-width="1.8" fill="none">
+              <path d="M651 170 L651 130 L738 130 L738 103" marker-end="url(#arrW)"/>
+            </g>
+            <g font-size="12.5" fill="var(--ink)" text-anchor="middle">
+              <text x="838" y="72" font-weight="700">OUTPUT</text>
+              <text x="838" y="89" font-size="11.5">Temperature over time</text>
+              <text x="838" y="103" font-size="11.5">at position x — T(x, t)</text>
+            </g>
+          </svg>
+          <p class="figcap">Word labels. Input signal (oscillator) → signal converter <i>C<sub>S</sub></i> → exponential signal → filter <strong>⊗</strong> (mixer / transform — a product) → normal response → Bode transform converter <i>C<sub>T</sub></i> → Bode response → steady state, with the transient state on a side branch adding in at the <strong>⊕</strong> point — the circle with a + before the output, where signals are added — output: temperature over time at position x, T(x, t). Any converter is <i>C</i> with a subscript for what it converts.</p>
+        </div>
+        <h3>Version 2 — graphs</h3>
+        <div class="fig">
+          <svg viewBox="0 0 800 260" role="img" aria-label="The same block diagram with graphs in place of the words: the input block holds a small oscillator graph in time, the signal converter block, labelled C subscript S, holds a small oscillator going in and an exponential coming out, the filter block, marked with the mixer symbol, a circle with a cross in it, holds the filter distribution graph — flat to the cutoff point at H/2 then straight down, the Bode form — the steady-state block holds the exponential distribution curve read at position x, the transient branch block holds a small decaying transient graph in time, adding in at the circle with a plus, and the output holds the temperature over time at position x graph, a smaller oscillator in time">
+            <defs>
+              <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
+            </defs>
+            <g font-size="10.5" fill="var(--muted)" text-anchor="middle">
+              <text x="134" y="32">oscillator</text>
+              <text x="298" y="32">exponential signal</text>
+            </g>
+            <!-- input: oscillator in time -->
+            <rect x="6" y="42" width="118" height="84" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+            <line x1="16" y1="104" x2="114" y2="104" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+            <path d="M16 58 C28 58 32 96 44 98 C56 100 60 74 72 76 C84 78 90 88 114 94" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
+            <path d="M16 62 C40 70 76 84 114 94" fill="none" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="4 3"/>
+            <!-- signal converter: oscillator in, exponential out -->
+            <rect x="148" y="42" width="140" height="84" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+            <text x="156" y="56" font-size="10.5" font-weight="700" fill="var(--ink)">C<tspan baseline-shift="sub" font-size="7.5">S</tspan></text>
+            <path d="M158 64 C164 64 166 84 172 85 C178 86 180 73 186 74 C190 75 192 78 194 80" fill="none" stroke="var(--heat)" stroke-width="1.8" opacity="0.55"/>
+            <line x1="198" y1="84" x2="208" y2="84" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#arrG)"/>
+            <path d="M214 60 C230 62 242 74 256 92 C266 104 274 109 280 110" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
+            <line x1="214" y1="110" x2="280" y2="110" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+            <!-- filter: Bode distribution — mixer / transform, ⊗ product -->
+            <rect x="312" y="42" width="140" height="84" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+            <text x="444" y="60" font-size="18" font-weight="700" fill="var(--ink)" text-anchor="end">⊗</text>
+            <path d="M324 62 L382 62 L438 112" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-dasharray="6 4"/>
+            <circle cx="382" cy="62" r="4" fill="var(--ink)"/>
+            <path d="M324 62 C350 64 372 74 396 92 C412 102 426 108 438 112" fill="none" stroke="var(--heat)" stroke-width="1.6" opacity="0.75"/>
+            <!-- steady state: exponential distribution value at position x -->
+            <rect x="476" y="42" width="118" height="84" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+            <path d="M488 56 C512 60 528 78 544 96 C556 107 566 112 580 112" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
+            <line x1="535" y1="52" x2="535" y2="116" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+            <circle cx="535" cy="84" r="4" fill="var(--heat)"/>
+            <!-- summing point -->
+            <circle cx="632" cy="84" r="15" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+            <text x="632" y="90" font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">+</text>
+            <!-- transient branch: decaying transient in time -->
+            <rect x="476" y="168" width="118" height="56" rx="6" fill="var(--panel)" stroke="var(--heat)" stroke-width="1.6"/>
+            <path d="M488 182 C502 184 508 208 520 208 C532 208 536 196 548 197 C560 198 566 206 580 208" fill="none" stroke="var(--heat)" stroke-width="2"/>
+            <line x1="488" y1="208" x2="580" y2="208" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+            <!-- arrows -->
+            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
+              <line x1="124" y1="84" x2="144" y2="84" marker-end="url(#arrG)"/>
+              <line x1="288" y1="84" x2="308" y2="84" marker-end="url(#arrG)"/>
+              <line x1="452" y1="84" x2="472" y2="84" marker-end="url(#arrG)"/>
+              <line x1="594" y1="84" x2="613" y2="84" marker-end="url(#arrG)"/>
+              <line x1="647" y1="84" x2="668" y2="84" marker-end="url(#arrG)"/>
+            </g>
+            <path d="M535 168 L535 150 L632 150 L632 103" fill="none" stroke="var(--heat)" stroke-width="1.8" marker-end="url(#arrG)"/>
+            <!-- output: temperature over time at position x — smaller oscillator -->
+            <g font-size="11.5" fill="var(--ink)" text-anchor="middle">
+              <text x="732" y="62" font-weight="700">OUTPUT</text>
+            </g>
+            <path d="M676 92 C686 92 690 108 698 109 C706 110 710 100 720 101 C732 102 742 106 756 108 C768 109 778 110 788 111" fill="none" stroke="var(--heat)" stroke-width="2"/>
+            <line x1="676" y1="110" x2="788" y2="110" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+            <g font-size="11" fill="var(--muted)">
+              <text x="6" y="140">oscillator — time</text>
+              <text x="148" y="140">C<tspan baseline-shift="sub" font-size="7.5">S</tspan> converter → exponential</text>
+              <text x="312" y="140">filter ⊗ mixer — distribution</text>
+              <text x="476" y="140">steady state at x</text>
+              <text x="476" y="238" fill="var(--heat)">transient — time</text>
+              <text x="788" y="126" text-anchor="end">T(x, t) — over time at x</text>
+              <text x="330" y="56" font-size="10.5">cutoff</text>
+            </g>
+          </svg>
+          <p class="figcap">Graphs in place of the words — same diagram, same flow. Input: the oscillator in time. Signal converter <i>C<sub>S</sub></i>: the oscillator going in, the exponential coming out — the swing dropped. Filter <strong>⊗</strong>: the distribution, Bode straight lines over the exponential, acting on that exponential as a mixer / transform — a product — in this version the transform converter <i>C<sub>T</sub></i> block is ignored, and the Bode graph is just drawn here, in the filter block. Steady state: the exponential read at position x. Side branch: the transient in time, adding in at the <strong>⊕</strong> point — the circle with a + before the output. Output: temperature over time at position x — T(x, t), a smaller oscillator in time.</p>
+        </div>
+        <p>For the simulator, the filter in this diagram is run as the <strong>exponential model</strong>, not the Bode simplification — same diagram, more accurate filter: the signal converter's exponential is what the simulator uses all the way through. The Bode form stays as the representation we draw in block diagrams and system diagrams.</p>
+      </div>
+    </section>
+
+    
+    <!-- ============ WATER LEVEL ============ -->
+    <section id="view-water" role="tabpanel" aria-labelledby="tab-water" hidden>
+      <div class="stage">
+        <div class="controls">
+          <div class="lab">Temp</div>
+          <div class="slider-wrap">
+            <input type="range" id="tempSliderW" min="20" max="50" step="0.5" value="25" aria-label="Temperature setpoint for the water terrarium, degrees Celsius" />
+          </div>
+          <div class="setval" id="setValW">25.0°</div>
+          <div class="setunit">°C setpoint</div>
+        </div>
+        <div class="tankbox">
+          <svg id="tankSvgW" viewBox="0 0 700 360" role="img" aria-label="Terrarium with a heating panel on top, air above and water below the water level line, heat radiating through all three mediums">
+            <defs>
+              <linearGradient id="airGradW" x1="0" y1="0" x2="0" y2="1">
+                <stop id="airTopW" offset="0%" stop-color="#ff8a3c" stop-opacity="0.30"/>
+                <stop id="airBotW" offset="100%" stop-color="#ff8a3c" stop-opacity="0.04"/>
+              </linearGradient>
+              <linearGradient id="waterGradW" x1="0" y1="0" x2="0" y2="1">
+                <stop id="watTopW" offset="0%" stop-color="#ff8a3c" stop-opacity="0.28"/>
+                <stop id="watBotW" offset="100%" stop-color="#3e7cb1" stop-opacity="0.45"/>
+              </linearGradient>
+            </defs>
+            <rect x="60" y="34" width="520" height="10" rx="3" fill="var(--glass-edge)"/>
+            <rect id="panelGlowW" x="190" y="18" width="260" height="16" rx="4" fill="#571f08"/>
+            <rect x="190" y="18" width="260" height="16" rx="4" fill="none" stroke="var(--ink)" stroke-opacity=".35"/>
+            <text x="320" y="11" text-anchor="middle" font-size="11" fill="var(--muted)">HEATING PANEL — TOP CENTRE</text>
+            <g id="raysW" stroke="var(--heat2)" stroke-width="3" stroke-linecap="round" fill="none" opacity="0">
+              <path d="M225 52 q-10 26 0 52 q10 26 0 52"/><path d="M270 52 q-10 26 0 52 q10 26 0 52"/>
+              <path d="M320 52 q-10 26 0 52 q10 26 0 52"/><path d="M370 52 q-10 26 0 52 q10 26 0 52"/>
+              <path d="M415 52 q-10 26 0 52 q10 26 0 52"/>
+            </g>
+            <rect x="68" y="44" width="504" height="150" fill="url(#airGradW)"/>
+            <rect x="68" y="194" width="504" height="122" fill="url(#waterGradW)"/>
+            <path id="waterLineW" d="M68 194 q31 -5 63 0 q31 5 63 0 q31 -5 63 0 q31 5 63 0 q31 -5 63 0 q31 5 63 0 q31 -5 58 0" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+            <rect x="60" y="44" width="520" height="280" fill="none" stroke="var(--glass-edge)" stroke-width="8"/>
+            <line x1="60" y1="324" x2="580" y2="324" stroke="var(--glass-edge)" stroke-width="8"/>
+            <g font-size="11" fill="var(--muted)">
+              <text x="592" y="120">AIR</text>
+              <text x="592" y="200">— WATER LEVEL</text>
+              <text x="592" y="262">WATER</text>
+            </g>
+            <text x="320" y="348" text-anchor="middle" font-size="11" fill="var(--muted)">THREE MEDIUMS — HEATING PAD · AIR · WATER</text>
+          </svg>
+          <div class="readouts">
+            <div class="ro"><div class="k">Air temp T_air</div><div class="v" id="roAirW">25.0 °C</div></div>
+            <div class="ro"><div class="k">Water temp T_water</div><div class="v" id="roWaterW">25.0 °C</div></div>
+            <div class="ro"><div class="k">State</div><div class="v steady" id="roStateW">Steady state</div></div>
+            <div class="ro"><div class="k">Heater power</div><div class="v" id="roPowerW">0.0 W</div></div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="sec">Graphs</h2>
+      <div class="graphs">
+        <div class="gcard">
+          <h3>Air and water temperature — live</h3>
+          <p class="sub">Rolling window: the last 100 s. The solid lines are the actual response — each temperature oscillates inside its own dashed envelope as it settles. Behind everything, the white dashed lines are the plain Newton exponentials: the simplified version with the oscillation removed. The y-axis auto-zooms and recentres — as T_air and T_water close in on each other, the top of the axis comes down and the remaining gap fills the graph.</p>
+          <canvas id="gTransientW" width="480" height="230" aria-label="Graph of air and water temperature over the last 100 seconds: oscillating curves inside dashed envelopes, white dashed Newton exponentials behind them, and an auto-zooming temperature axis"></canvas>
+          <div class="legend"><span><i class="sw" style="background:#c53d10"></i>T_air — actual, oscillating</span><span><i class="sw" style="background:repeating-linear-gradient(90deg,#c53d10 0 5px,transparent 5px 9px)"></i>T_air envelope</span><span><i class="sw" style="background:#3e7cb1"></i>T_water — actual, oscillating</span><span><i class="sw" style="background:repeating-linear-gradient(90deg,#3e7cb1 0 5px,transparent 5px 9px)"></i>T_water envelope</span><span><i class="sw" style="background-color:#3a3b36;background-image:repeating-linear-gradient(90deg,#ffffff 0 5px,transparent 5px 9px)"></i>Newton exponential — white dashed, behind</span></div>
+        </div>
+        <div class="gcard">
+          <h3>Heat distribution through the three mediums</h3>
+          <p class="sub">Normalised temperature θ from the panel, through the air, across the water level, and down through the water. Water carries heat deeper and evens it out.</p>
+          <canvas id="gDistW" width="480" height="230" aria-label="Graph of normalised temperature versus depth through air and water"></canvas>
+        </div>
+      </div>
+      <div class="graphs" style="margin-top:14px">
+        <div class="gcard" style="grid-column:1 / -1">
+          <h3>Heat distribution — log-stretched, height along the bottom</h3>
+          <p class="sub">The three-medium profile from the graph above, redrawn with height along the bottom on a plain linear scale — 0, H/2 and H evenly spaced, so H/2 sits at the halfway mark again — and normalised temperature θ moved to the right-hand axis, squished onto a log scale. The left-hand axis is the same θ on a plain linear scale, so the squishing on the right is visible against it. The curve is redrawn stretched to match that squishing. The dot is the chosen anchor point — the profile where it crosses H/2, just above the water level — and the dashed lines are H/2 along the bottom and θ at that anchor on the right.</p>
+          <canvas id="gLogDistW" width="960" height="230" aria-label="Graph of the three-medium heat distribution with height along the bottom on a linear scale, normalised temperature on a log-squished axis on the right and a linear theta axis on the left, H/2 at the halfway mark"></canvas>
+        </div>
+      </div>
+      <div class="graphs" style="margin-top:14px">
+        <div class="gcard" style="grid-column:1 / -1">
+          <h3>H<sub>2</sub>O total = H<sub>2</sub>O liquid + H<sub>2</sub>O gas — equilibrium at each temperature</h3>
+          <p class="sub">The same total, split two ways. As temperature rises the saturation point moves: the gas curve climbs and the liquid curve falls by exactly the same amount, so the dashed total never moves. The dot marks the current setpoint. Amounts are shown as a percentage of the total — the gas share is small, because only the surface layer of molecules has enough energy to break its hydrogen bonds and leave. The temperature that matters is the one at the surface — read it off the distribution graph above — because that surface temperature sets the local saturation point, and the saturation point is the equilibrium this split travels to.</p>
+          <canvas id="gH2O" width="960" height="230" aria-label="Graph of H2O liquid and H2O gas amounts against temperature, overlaid, with their sum H2O total drawn as a dashed line"></canvas>
+          <div class="legend"><span><i class="sw" style="background:#3e7cb1"></i>H<sub>2</sub>O liquid</span><span><i class="sw" style="background:#c53d10"></i>H<sub>2</sub>O gas (vapour)</span><span><i class="sw" style="background:repeating-linear-gradient(90deg,var(--ink) 0 5px,transparent 5px 9px)"></i>H<sub>2</sub>O total — dashed, constant</span></div>
+        </div>
+      </div>
+
+      <h2 class="sec">Equations — from the simple solution to T_water</h2>
+      <div class="eqs">
+        <h3>The simple solution (air only)</h3>
+        <p>One temperature for the air, driven by the pad: &nbsp; d<i>T</i>/d<i>t</i> = <i>k</i>·(<i>T<sub>s</sub></i> − <i>T</i>), &nbsp; <i>T<sub>s</sub></i> = <i>T</i><sub>heating pad</sub></p>
+        <p>Solution: &nbsp; <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T</i><sub>0</sub>) <i>e</i><sup>−<i>kt</i></sup> &nbsp; <span class="n">(one medium, one exponential, no surface)</span></p>
+        <h3>With water — a second temperature, T_water</h3>
+        <p>The water is a second medium with its own temperature, <i>T</i><sub>water</sub>. The pad still drives the air, and now the air drives the water across the surface:</p>
+        <p>Air: &nbsp; d<i>T</i><sub>air</sub>/d<i>t</i> = <i>k</i><sub>air</sub>·(<i>T</i><sub>heating pad</sub> − <i>T</i><sub>air</sub>) − <i>k</i><sub>s</sub>·(<i>T</i><sub>air</sub> − <i>T</i><sub>water</sub>)</p>
+        <p>Water: &nbsp; d<i>T</i><sub>water</sub>/d<i>t</i> = <i>k</i><sub>w</sub>·(<i>T</i><sub>air</sub> − <i>T</i><sub>water</sub>) &nbsp; <span class="n">(k_w is small — water has far more heat capacity, so T_water moves slowly and lags T_air)</span></p>
+        <p>Steady state: &nbsp; <i>T</i><sub>air</sub> = <i>T</i><sub>water</sub> = <i>T<sub>s</sub></i>, &nbsp; and total water is conserved: &nbsp; H<sub>2</sub>O total = H<sub>2</sub>O liquid + H<sub>2</sub>O gaseous &nbsp; <span class="n">(sealed tank — water only moves between liquid and vapour)</span></p>
+        <h3>The surface — saturation and the spring model</h3>
+        <p>Clapeyron (Clausius–Clapeyron): &nbsp; d ln <i>p</i><sub>sat</sub> / d<i>T</i> = <i>L</i> / (<i>R<sub>v</sub> T</i><sup>2</sup>) &nbsp; <span class="n">(L = enthalpy of vaporisation — the energy price of breaking hydrogen bonds; the saturation point is the equilibrium point, and it moves with temperature)</span></p>
+        <p>Temperature → energy fluctuations at the surface: &nbsp; Δ<i>E</i> ≈ <i>m<sub>s</sub> c<sub>p</sub></i> Δ<i>T</i>, &nbsp; and the share of surface molecules able to escape ∝ <i>e</i><sup>−<i>L</i> / (<i>k<sub>B</sub> T</i>)</sup> &nbsp; <span class="n">(a temperature fluctuation is an energy fluctuation: raise T and the Boltzmann tail fattens, more surface molecules can pay L and leave as gas; lower T and the tail thins, more land back as liquid — that exchange is what moves the surface, and in level it is tiny, of the order of micrometres, so the graphs below track amounts of H₂O, not millimetres of level)</span></p>
+        <p>Spring model of the surface, for the gap <i>u</i> from equilibrium: &nbsp; d<sup>2</sup><i>u</i>/d<i>t</i><sup>2</sup> + 2ζω<sub><i>n</i></sub> d<i>u</i>/d<i>t</i> + ω<sub><i>n</i></sub><sup>2</sup> <i>u</i> = 0</p>
+        <p>Damped solution: &nbsp; <i>u</i>(<i>t</i>) = <i>A e</i><sup>−<i>t</i>/τ</sup> cos(ω<sub><i>d</i></sub> <i>t</i> + φ) &nbsp; <span class="n">(an oscillation inside a decaying exponential envelope — keep the envelope and drop the wiggle and you are back to the simple exponential)</span></p>
+      </div>
+
+      <h2 class="sec">Note — water, the surface, and the spring model</h2>
+      <div class="letter">
+        <div class="toc">
+          <p class="t">Contents</p>
+          <ol>
+            <li><a href="#w-three">Three mediums now — pad, air, water</a></li>
+            <li><a href="#w-step">The step from the simple solution to T_water</a></li>
+            <li><a href="#w-surface">The water surface and hydrogen bonds</a></li>
+            <li><a href="#w-energy">The missing step — temperature → energy fluctuations at the surface</a></li>
+            <li><a href="#w-clapeyron">From Clapeyron to the spring</a></li>
+            <li><a href="#w-graph">The oscillation graph — T_air, T_s and the water level</a></li>
+            <li><a href="#w-h2o">H₂O total = H₂O liquid + H₂O gas — the partition spring</a></li>
+            <li><a href="#w-driver">Temperature drives, the amounts accumulate — driver and integral</a></li>
+            <li><a href="#w-vocabulary">Signals, filters, and simplifications — the vocabulary in this system</a></li>
+          </ol>
+        </div>
+        <p>A terrarium with air <em>and</em> water in it, and a surface between them. The spring model and the oscillations are about that surface — how it is disturbed when the temperature changes, and how it settles again at the new equilibrium.</p>
+
+        <h3 id="w-three">1. Three mediums now — pad, air, water</h3>
+        <p>The tank now has water in it, filled up to the <strong>water level</strong>, with air above it. Heat now travels through three mediums in a chain: the <strong>heating pad</strong> hands heat to the <strong>air</strong>, and the air hands heat to the <strong>water</strong> across the surface. That is why the heat distribution had to be redone — the animation and the second graph above show one temperature profile running through all three, and the water part behaves differently: water has a much larger heat capacity, so it warms and cools slowly, and it evens the temperature out with depth instead of letting it fade quickly the way air does.</p>
+        <p>The tank is sealed and the water level is steady in the long run: <strong>H<sub>2</sub>O total = H<sub>2</sub>O liquid + H<sub>2</sub>O gaseous</strong>. Water is never created or lost — it only moves between the liquid and the vapour in the air. The point where the two balance is the <strong>saturation point</strong>, and that saturation point is the <strong>equilibrium point</strong> of this system.</p>
+
+        <h3 id="w-step">2. The step from the simple solution to T_water</h3>
+        <p>Start from the simple solution: one temperature for the air, and two named temperatures in the story — <i>T<sub>s</sub></i>, the setpoint, which is <i>T</i><sub>heating pad</sub>, the pad temperature the thermostat holds. One equation, one exponential.</p>
+        <p>Adding water means adding <strong>one more temperature: <i>T</i><sub>water</sub></strong>. Nothing about the pad or the air equation is thrown away — the air equation gains one extra term, the heat it loses to (or gains from) the water, and the water gets its own equation, driven by the gap (<i>T</i><sub>air</sub> − <i>T</i><sub>water</sub>). Because water's heat capacity is so much bigger, its constant <i>k<sub>w</sub></i> is small: <i>T</i><sub>water</sub> chases <i>T</i><sub>air</sub> slowly. That lag is exactly what the live graph shows — move the slider and <i>T</i><sub>air</sub> moves first, <i>T</i><sub>water</sub> follows behind. In the steady state the chase ends: <i>T</i><sub>air</sub> = <i>T</i><sub>water</sub> = <i>T<sub>s</sub></i>. When the temperature changes, the system passes through a <strong>transient</strong> — water temporarily evaporates or condenses more — until it reaches the new equilibrium at the new saturation point.</p>
+
+        <h3 id="w-surface">3. The water surface and hydrogen bonds</h3>
+        <p>The liquid itself is mostly still. Almost everything happens at the <strong>surface</strong>, where molecules constantly leave into the air (evaporation) and land back (condensation). To see why the surface behaves as it does, look at how water molecules connect.</p>
+        <div class="fig">
+          <svg viewBox="0 0 640 300" role="img" aria-label="Magnified water molecules at the surface: each molecule is one larger oxygen atom with two smaller hydrogen atoms, joined to neighbours by dashed hydrogen bonds">
+            <line x1="40" y1="105" x2="600" y2="105" stroke="var(--ink)" stroke-width="2"/>
+            <text x="320" y="40" text-anchor="middle" font-size="12" fill="var(--ink)">AIR + WATER VAPOUR ABOVE — SURFACE — LIQUID BELOW</text>
+            <g stroke="var(--heat)" stroke-width="2" stroke-dasharray="4 3">
+              <line x1="178" y1="128" x2="222" y2="133"/><line x1="338" y1="126" x2="382" y2="131"/>
+              <line x1="168" y1="162" x2="188" y2="192"/><line x1="322" y1="160" x2="340" y2="190"/><line x1="255" y1="196" x2="300" y2="197"/>
+            </g>
+            <g stroke="var(--ink)">
+              <circle cx="160" cy="145" r="12" fill="#c53d10"/><circle cx="141" cy="125" r="6.5" fill="var(--panel)"/><circle cx="179" cy="125" r="6.5" fill="var(--panel)"/>
+              <circle cx="320" cy="143" r="12" fill="#c53d10"/><circle cx="301" cy="123" r="6.5" fill="var(--panel)"/><circle cx="339" cy="123" r="6.5" fill="var(--panel)"/>
+              <circle cx="475" cy="147" r="12" fill="#c53d10"/><circle cx="456" cy="127" r="6.5" fill="var(--panel)"/><circle cx="494" cy="127" r="6.5" fill="var(--panel)"/>
+              <circle cx="240" cy="198" r="12" fill="#c53d10"/><circle cx="221" cy="178" r="6.5" fill="var(--panel)"/><circle cx="259" cy="178" r="6.5" fill="var(--panel)"/>
+              <circle cx="400" cy="200" r="12" fill="#c53d10"/><circle cx="381" cy="180" r="6.5" fill="var(--panel)"/><circle cx="419" cy="180" r="6.5" fill="var(--panel)"/>
+            </g>
+            <g font-size="10.5" fill="var(--ink)" text-anchor="middle">
+              <text x="160" y="149" fill="#fff">O</text><text x="320" y="147" fill="#fff">O</text><text x="475" y="151" fill="#fff">O</text>
+              <text x="240" y="202" fill="#fff">O</text><text x="400" y="204" fill="#fff">O</text>
+            </g>
+            <g font-size="11.5" fill="var(--ink)">
+              <text x="40" y="262">Large circle = oxygen (O) · small circle = hydrogen (H)</text>
+              <text x="40" y="282">Dashed line = hydrogen bond between molecules</text>
+            </g>
+          </svg>
+          <p class="figcap">Molecules at the surface, magnified. The dashed hydrogen bonds join the hydrogen of one molecule to the oxygen of its neighbour.</p>
+        </div>
+        <p><strong>What a hydrogen bond is.</strong> Inside one molecule, the two hydrogens are strongly bonded to their own oxygen — those covalent bonds do not come apart. A hydrogen bond happens <em>between</em> molecules, and it is much weaker. Oxygen pulls the shared electrons toward itself, so the oxygen end of a molecule is slightly negative and each hydrogen end slightly positive: every water molecule is a tiny dipole, a little magnet-like object with a positive and a negative end. The slightly positive hydrogen of one molecule is attracted to the slightly negative oxygen of its neighbour — <strong>that attraction is a hydrogen bond</strong>.</p>
+        <p>Hydrogen bonds are only about a twentieth as strong as the covalent bonds inside the molecule, so the thermal jiggling that <em>is</em> temperature breaks them constantly, and new ones form a moment later with whichever neighbour is close. Liquid water is a flickering network of little attractions that stretch, snap and reconnect. Those bonds are also why water holds together at all — <strong>cohesion</strong>: to leave the liquid, a molecule must break its hydrogen bonds, and that costs energy. At the surface there are no neighbours above, so a surface molecule's bonds pull it only sideways and down, back into the liquid — <strong>surface tension</strong>, a surface always being pulled inward, like a stretched skin. That is why we can ignore the mostly-still bulk and focus on the surface: it is the only unbalanced place, and the only place molecules leave or arrive.</p>
+
+        <h3 id="w-energy">4. The missing step — temperature → energy fluctuations at the surface</h3>
+        <p>One step was missing between the temperature slider and the moving surface, and it is this conversion. A temperature is an average particle energy, so <strong>a temperature fluctuation <em>is</em> an energy fluctuation</strong> — at the surface, Δ<i>E</i> ≈ <i>m<sub>s</sub> c<sub>p</sub></i> Δ<i>T</i> for the surface layer. That energy is what the surface spends and receives: a surface molecule can only leave the liquid if its share of the energy is enough to break its hydrogen bonds — the price <i>L</i> in the Clapeyron equation — and the share of molecules rich enough sits in the tail of the Boltzmann distribution, ∝ <i>e</i><sup>−<i>L</i>/(<i>k<sub>B</sub> T</i>)</sup>.</p>
+        <p>So when the temperature wobbles or steps, the energy at the surface wobbles with it: the tail fattens, evaporation wins for a while and the surface is disturbed one way; the tail thins, condensation wins and it is disturbed the other way. Those energy fluctuations at the surface are what make the water level oscillate through the transient, and what carry it to the new steady state — the new saturation point — once the fluctuations settle at the new temperature. Averaged, that disturbed surface is the spring of the next section.</p>
+        <p>One honest warning about size: converted into a <em>distance</em>, this is tiny. The vapour the air above the water can hold is only grams, spread over the whole surface, so the level itself moves by micrometres, not millimetres. The spring picture is still the right picture — just do not expect to see the level travel. That is why the H<sub>2</sub>O graph above and the partition spring in section 7 track <em>amounts</em> of water, liquid and gas, rather than a distance.</p>
+
+        <h3 id="w-clapeyron">5. From Clapeyron to the spring</h3>
+        <p>The <strong>Clapeyron equation</strong> describes the equilibrium between the liquid and its vapour: at any temperature the vapour settles at one saturation pressure. Below it, more molecules leave than land — evaporation. Above it, more land than leave — condensation. Its Clausius–Clapeyron form (in the equations above) involves exactly the quantities you would expect: enthalpy (through <i>L</i>, the energy price of breaking the hydrogen bonds), entropy folded into the same balance, volume change, pressure and temperature. Its message: <strong>change the temperature and you move the equilibrium target</strong> — the saturation point itself shifts.</p>
+        <p>Now the spring. Each hydrogen bond is a tiny attraction that pulls back when stretched — a tiny spring. Millions acting together give the surface as a whole a restoring pull, roughly proportional to how far it is disturbed from equilibrium. So we replace the whole flickering network with <strong>one spring standing in for the surface</strong>: Clapeyron sets where the spring wants to rest; the bond network supplies the pull.</p>
+        <p>It is a <strong>reverse spring — pulled, not pushed</strong>. Set the temperature <em>below</em> where it currently is, and the spring's target is set below where the surface currently sits: the spring feels a <strong>pull inward</strong>. Set it above, and it is <strong>pulled outward</strong>. The temperature difference changes first; the pull follows. At particle level the swinging dies because particles hit other particles, lose energy, bounce back, bounce the other way and lose more — until they reach the new average.</p>
+
+        <h3 id="w-graph">6. The oscillation graph — T_air, T_s and the water level</h3>
+        <div class="fig">
+          <svg viewBox="0 0 640 230" role="img" aria-label="Damped oscillation graph: T air on the y axis, starting amplitude T, target amplitude T s, oscillating evenly above and below the water level centre line inside a decaying envelope">
+            <line x1="70" y1="115" x2="560" y2="115" stroke="var(--muted)" stroke-dasharray="2 4"/>
+            <path d="M70.0,177.0 L78.2,174.1 L86.3,171.3 L94.5,168.7 L102.7,166.2 L110.8,163.8 L119.0,161.5 L127.2,159.3 L135.3,157.2 L143.5,155.2 L151.7,153.3 L159.8,151.6 L168.0,149.8 L176.2,148.2 L184.3,146.6 L192.5,145.2 L200.7,143.7 L208.8,142.4 L217.0,141.1 L225.2,139.9 L233.3,138.7 L241.5,137.6 L249.7,136.5 L257.8,135.5 L266.0,134.6 L274.2,133.7 L282.3,132.8 L290.5,131.9 L298.7,131.2 L306.8,130.4 L315.0,129.7 L323.2,129.0 L331.3,128.3 L339.5,127.7 L347.7,127.1 L355.8,126.5 L364.0,126.0 L372.2,125.5 L380.3,125.0 L388.5,124.5 L396.7,124.1 L404.8,123.6 L413.0,123.2 L421.2,122.9 L429.3,122.5 L437.5,122.1 L445.7,121.8 L453.8,121.5 L462.0,121.2 L470.2,120.9 L478.3,120.6 L486.5,120.4 L494.7,120.1 L502.8,119.9 L511.0,119.6 L519.2,119.4 L527.3,119.2 L535.5,119.0 L543.7,118.8 L551.8,118.6 L560.0,118.5" fill="none" stroke="var(--heat)" stroke-width="1.8" stroke-dasharray="6 4"/>
+            <path d="M70.0,53.0 L78.2,55.9 L86.3,58.7 L94.5,61.3 L102.7,63.8 L110.8,66.2 L119.0,68.5 L127.2,70.7 L135.3,72.8 L143.5,74.8 L151.7,76.7 L159.8,78.4 L168.0,80.2 L176.2,81.8 L184.3,83.4 L192.5,84.8 L200.7,86.3 L208.8,87.6 L217.0,88.9 L225.2,90.1 L233.3,91.3 L241.5,92.4 L249.7,93.5 L257.8,94.5 L266.0,95.4 L274.2,96.3 L282.3,97.2 L290.5,98.1 L298.7,98.8 L306.8,99.6 L315.0,100.3 L323.2,101.0 L331.3,101.7 L339.5,102.3 L347.7,102.9 L355.8,103.5 L364.0,104.0 L372.2,104.5 L380.3,105.0 L388.5,105.5 L396.7,105.9 L404.8,106.4 L413.0,106.8 L421.2,107.1 L429.3,107.5 L437.5,107.9 L445.7,108.2 L453.8,108.5 L462.0,108.8 L470.2,109.1 L478.3,109.4 L486.5,109.6 L494.7,109.9 L502.8,110.1 L511.0,110.4 L519.2,110.6 L527.3,110.8 L535.5,111.0 L543.7,111.2 L551.8,111.4 L560.0,111.5" fill="none" stroke="var(--heat)" stroke-width="1.8" stroke-dasharray="6 4"/>
+            <path d="M70.0,177.0 L74.5,171.5 L78.9,159.3 L83.4,142.2 L87.8,122.5 L92.3,103.0 L96.7,85.9 L101.2,73.3 L105.6,66.6 L110.1,66.2 L114.5,72.0 L119.0,82.8 L123.5,97.1 L127.9,112.9 L132.4,128.2 L136.8,141.0 L141.3,149.9 L145.7,154.0 L150.2,153.1 L154.6,147.4 L159.1,138.0 L163.5,126.2 L168.0,113.6 L172.5,101.8 L176.9,92.3 L181.4,86.1 L185.8,83.8 L190.3,85.5 L194.7,90.8 L199.2,98.9 L203.6,108.5 L208.1,118.5 L212.5,127.5 L217.0,134.5 L221.5,138.8 L225.9,139.8 L230.4,137.7 L234.8,132.8 L239.3,126.0 L243.7,118.2 L248.2,110.3 L252.6,103.5 L257.1,98.4 L261.5,95.7 L266.0,95.5 L270.5,97.7 L274.9,102.0 L279.4,107.7 L283.8,114.0 L288.3,120.1 L292.7,125.3 L297.2,128.9 L301.6,130.6 L306.1,130.2 L310.5,128.0 L315.0,124.3 L319.5,119.6 L323.9,114.5 L328.4,109.8 L332.8,106.0 L337.3,103.5 L341.7,102.5 L346.2,103.2 L350.6,105.3 L355.1,108.5 L359.5,112.3 L364.0,116.3 L368.5,119.9 L372.9,122.8 L377.4,124.5 L381.8,124.9 L386.3,124.1 L390.7,122.2 L395.2,119.5 L399.6,116.3 L404.1,113.2 L408.5,110.5 L413.0,108.4 L417.5,107.3 L421.9,107.2 L426.4,108.1 L430.8,109.8 L435.3,112.0 L439.7,114.6 L444.2,117.0 L448.6,119.1 L453.1,120.5 L457.5,121.2 L462.0,121.1 L466.5,120.2 L470.9,118.7 L475.4,116.9 L479.8,114.9 L484.3,113.0 L488.7,111.4 L493.2,110.4 L497.6,110.0 L502.1,110.3 L506.5,111.1 L511.0,112.4 L515.5,113.9 L519.9,115.5 L524.4,116.9 L528.8,118.1 L533.3,118.8 L537.7,119.0 L542.2,118.6 L546.6,117.9 L551.1,116.8 L555.5,115.6 L560.0,114.3" fill="none" stroke="var(--ink)" stroke-width="2.4"/>
+            <g font-size="12" fill="var(--ink)">
+              <text x="6" y="60">T_air</text><text x="6" y="76">amplitude</text>
+              <text x="76" y="46">T — starting amplitude (T_air at t = 0)</text>
+              <text x="200" y="103">water level — centre line (average of the surface oscillations)</text>
+              <text x="330" y="140">T_s — target amplitude (new steady state)</text>
+              <text x="470" y="24" fill="var(--heat)">envelope: ±A e^(−t/τ)</text>
+              <text x="500" y="215">time →</text>
+            </g>
+          </svg>
+          <p class="figcap">The spring model as a graph. The y-axis is <i>T</i><sub>air</sub>; the curve starts at <i>T</i>, the starting amplitude, and settles on <i>T<sub>s</sub></i>, the target amplitude. The centre line is the <strong>water level</strong> — the average of the surface oscillations — and the surface oscillates evenly above and below it, caged by the decaying envelope.</p>
+        </div>
+        <div class="fig live-spring">
+          <div class="live-head">
+            <span class="live-title">Live — spring → graph in time</span>
+            <span class="live-vals"><span id="springTRead">T = 25.0 °C</span> &nbsp;·&nbsp; <span id="springTsRead">T<sub>s</sub> = 25.0 °C</span></span>
+          </div>
+          <div class="live-grid">
+            <div class="live-pane">
+              <svg id="springSvg" viewBox="0 0 260 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animated spring: its lower end is the water surface at temperature T, pulled toward the target height set by T s">
+                <g font-size="10.5" fill="var(--muted)" text-anchor="end">
+                  <text x="26" y="54">50°</text><text x="26" y="124">40°</text>
+                  <text x="26" y="194">30°</text><text x="26" y="264">20°</text>
+                </g>
+                <g stroke="var(--line)" stroke-width="1">
+                  <line x1="30" y1="50" x2="30" y2="260"/>
+                  <line x1="26" y1="50" x2="30" y2="50"/><line x1="26" y1="120" x2="30" y2="120"/>
+                  <line x1="26" y1="190" x2="30" y2="190"/><line x1="26" y1="260" x2="30" y2="260"/>
+                </g>
+                <text x="14" y="160" font-size="11" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 160)">T_air amplitude</text>
+                <!-- target line: T_s -->
+                <line id="springTargetLine" x1="34" y1="225" x2="248" y2="225" stroke="var(--heat)" stroke-width="1.6" stroke-dasharray="7 4"/>
+                <text id="springTargetLabel" x="248" y="217" font-size="12.5" font-weight="700" fill="var(--heat)" text-anchor="end">T_s — target</text>
+                <!-- fixed support -->
+                <rect x="62" y="24" width="136" height="8" rx="2" fill="var(--glass-edge)"/>
+                <line x1="130" y1="32" x2="130" y2="42" stroke="var(--ink)" stroke-width="2.5"/>
+                <!-- water below the surface -->
+                <rect id="springWater" x="55" y="230" width="150" height="38" fill="#3e7cb1" opacity="0.30"/>
+                <!-- the spring coil -->
+                <path id="springCoil" d="" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+                <!-- surface / mass at the spring's lower end -->
+                <g id="springMass">
+                  <rect id="springMassBar" x="55" y="220" width="150" height="10" rx="3" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+                </g>
+                <text id="springCurrentLabel" x="212" y="229" font-size="12.5" font-weight="700" fill="var(--ink)">T</text>
+                <text x="130" y="290" font-size="11" fill="var(--muted)" text-anchor="middle">water level — centre line is T_s</text>
+              </svg>
+            </div>
+            <div class="live-pane">
+              <canvas id="gSpring" width="520" height="300" aria-label="Live graph drawn from the spring: T oscillating in time and settling on the dashed T s target line"></canvas>
+            </div>
+          </div>
+          <div class="live-controls">
+            <label for="tempSliderSpring">Temp</label>
+            <input type="range" id="tempSliderSpring" min="20" max="50" step="0.5" value="25" aria-label="Temperature slider for the live spring animation — sets T s" />
+            <span class="setval" id="springSetVal">25.0°</span>
+            <span class="setunit">°C setpoint — T<sub>s</sub></span>
+          </div>
+          <p class="figcap">Move the temperature slider — here, or the one at the top of this tab. <i>T<sub>s</sub></i> jumps straight to the new setpoint and the dashed target line moves with it: that is the spring's new target height. The spring is pulled toward it and <i>T</i> oscillates evenly above and below the water level, each swing smaller, until it settles on <i>T<sub>s</sub></i>. The graph on the right is drawn live from the spring's own motion — the dot at its right edge is the spring's end, and the phasor's height is <i>T</i>.</p>
+        </div>
+        <p>Read the graph in words: a pulled spring does not glide to its new resting point — it swings past it, comes back, swings past again, each swing smaller, until it settles on the new average. That is the transient of this system: after a temperature change, evaporation and condensation overshoot each other in turn, inside the exponential envelope, until the surface rests at the water level for the new saturation point. And if you keep only the envelope and delete the wiggle, you get back the smooth exponential of the simple solution — which is why the simple solution works as well as it does, and exactly what it leaves out.</p>
+
+        <h3 id="w-h2o">7. H₂O total = H₂O liquid + H₂O gas — the partition spring</h3>
+        <p>Now run the same spring idea not on the water level, but on the <strong>split of the water itself</strong>. The tank is sealed, so the total never changes — it only divides: <strong>H<sub>2</sub>O total = H<sub>2</sub>O liquid + H<sub>2</sub>O gas</strong>. Temperature sets the target split, through the saturation point: warm the tank and the equilibrium gas share grows while the liquid share falls by the same amount; cool it and the split swings back. But the split does not jump — evaporation and condensation overshoot each other in turn, so the gas share oscillates around its new target inside the same decaying envelope, exactly like the surface did. One spring, this time standing in for the partition instead of the level.</p>
+        <p><strong>This is the complete model for the water level in a container, based on temperature alone.</strong> The whole chain, in order: <strong>temperature changes the saturation point → the saturation point is the equilibrium point → when the temperature changes, the equilibrium itself changes → the transient is simply the system travelling to the new equilibrium.</strong> Nothing else is needed: give the model a temperature and it gives you where the water must end up; give it a temperature <em>change</em> and the spring gives you the journey — the overshoot, the settling, the new steady state. The water level is not a separate thing to solve afterwards; it is this partition, read at the surface.</p>
+        <p>It also ties back to the temperature distribution. The split is not set by some single tank temperature — it is set <em>at the surface</em>, by the temperature the distribution graph (second graph at the top of this tab) has at the water-level depth. That surface temperature sets the <strong>local saturation point</strong> there: how much vapour the air right above the surface can hold. Read the distribution to get the surface temperature, the surface temperature gives the saturation point, the saturation point gives the target split — and the two overlaid curves, here and in the graph at the top of this tab, then let you <strong>read off, at any given time, how much water is in the air as gas and how much is in the liquid</strong>, mid-transient or settled, with the dashed total confirming the sum never changes.</p>
+        <div class="fig live-spring">
+          <div class="live-head">
+            <span class="live-title">Live — partition spring → graph in time</span>
+            <span class="live-vals"><span id="hGasRead">H₂O gas = 2.0%</span> &nbsp;·&nbsp; <span id="hLiqRead">H₂O liquid = 98.0%</span> &nbsp;·&nbsp; <span>H₂O total = 100%</span></span>
+          </div>
+          <div class="live-grid">
+            <div class="live-pane">
+              <svg id="springSvgH" viewBox="0 0 260 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animated spring for the H2O partition: its lower end is the H2O gas share, pulled toward the target share set by the temperature">
+                <g font-size="10.5" fill="var(--muted)" text-anchor="end">
+                  <text x="26" y="54">12%</text><text x="26" y="124">8%</text>
+                  <text x="26" y="194">4%</text><text x="26" y="264">0%</text>
+                </g>
+                <g stroke="var(--line)" stroke-width="1">
+                  <line x1="30" y1="50" x2="30" y2="260"/>
+                  <line x1="26" y1="50" x2="30" y2="50"/><line x1="26" y1="120" x2="30" y2="120"/>
+                  <line x1="26" y1="190" x2="30" y2="190"/><line x1="26" y1="260" x2="30" y2="260"/>
+                </g>
+                <text x="14" y="160" font-size="11" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 160)">H₂O gas share</text>
+                <line id="springTargetLineH" x1="34" y1="225" x2="248" y2="225" stroke="var(--heat)" stroke-width="1.6" stroke-dasharray="7 4"/>
+                <text id="springTargetLabelH" x="248" y="217" font-size="12.5" font-weight="700" fill="var(--heat)" text-anchor="end">gas target</text>
+                <rect x="62" y="24" width="136" height="8" rx="2" fill="var(--glass-edge)"/>
+                <line x1="130" y1="32" x2="130" y2="42" stroke="var(--ink)" stroke-width="2.5"/>
+                <rect id="springWaterH" x="55" y="230" width="150" height="38" fill="#3e7cb1" opacity="0.30"/>
+                <path id="springCoilH" d="" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+                <rect id="springMassBarH" x="55" y="220" width="150" height="10" rx="3" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+                <text id="springCurrentLabelH" x="212" y="229" font-size="12.5" font-weight="700" fill="var(--ink)">gas</text>
+                <text x="130" y="290" font-size="11" fill="var(--muted)" text-anchor="middle">spring end = H₂O gas share</text>
+              </svg>
+            </div>
+            <div class="live-pane">
+              <canvas id="gSpringH" width="520" height="300" aria-label="Live graph drawn from the partition spring: H2O liquid and H2O gas curves overlaid in time, with the H2O total drawn as a dashed line"></canvas>
+            </div>
+          </div>
+          <div class="live-controls">
+            <label for="tempSliderH">Temp</label>
+            <input type="range" id="tempSliderH" min="20" max="50" step="0.5" value="25" aria-label="Temperature slider for the H2O partition spring — sets the target split" />
+            <span class="setval" id="hSetVal">25.0°</span>
+            <span class="setunit">°C setpoint — sets the target split</span>
+          </div>
+          <p class="figcap">Move the temperature slider — here, or the one at the top of this tab. The dashed line on the spring jumps to the new target gas share, the spring oscillates toward it, and the graph on the right is drawn live from that motion: <strong>H<sub>2</sub>O gas</strong> climbing or falling in swings, <strong>H<sub>2</sub>O liquid</strong> mirroring it exactly, and <strong>H<sub>2</sub>O total</strong> as the flat dashed line at 100% — the sum never moves, only the split does.</p>
+        </div>
+
+        <h3 id="w-driver">8. Temperature drives, the amounts accumulate — driver and integral</h3>
+        <p>The two live graphs on this tab are not two separate stories — one is the cause, the other is the accumulated effect. <strong>The temperature graph is the driver. The liquid/gas graph is its integral.</strong></p>
+        <p>Temperature is energy — the average energy of the particles — and a temperature <em>difference</em> is a rate waiting to happen. Everywhere in this model, a flow is proportional to a gap: heat flow ∝ (<i>T<sub>s</sub></i> − <i>T</i>), and d<i>T</i>/d<i>t</i> = <i>k</i>·(gap). So read the temperature graph as a graph of <strong>driving force over time</strong>: the vertical distance between <i>T</i><sub>air</sub> and <i>T</i><sub>water</sub> at any moment is the push acting at that moment. A wide gap means change is being driven hard; a narrow gap means it is barely being driven at all. That is also why the auto-zoom on that graph matters — as the two curves converge the push fades, and the zoom keeps the small remaining push visible instead of letting it flatten into the axis.</p>
+        <p>The push acts at the surface, and the surface is where the two graphs meet. <strong>The water temperature at the surface sets the saturation point there</strong> — through Clapeyron, a warmer surface has a higher saturation pressure — and the saturation point sets how much water the air holds at equilibrium: the target gas share on the H<sub>2</sub>O graph. <strong>The air temperature controls the supply side:</strong> it decides how fast energy arrives at the surface, to pay the hydrogen-bond price <i>L</i> for molecules leaving, or how fast energy is carried away when molecules land back and give that price up. <i>T</i><sub>water</sub> names the target; <i>T</i><sub>air</sub> names how fast energy is being delivered toward it.</p>
+        <p class="f">H<sub>2</sub>O gas(<i>t</i>) = H<sub>2</sub>O gas(0) + ∫<sub>0</sub><sup><i>t</i></sup> (evaporation − condensation) d<i>t</i>, &nbsp; with &nbsp; (evaporation − condensation) ∝ the driving gap</p>
+        <p>The amounts do not respond to the temperature itself — they respond to the net exchange rate, <strong>summed over time</strong>. While <i>T</i><sub>air</sub> and <i>T</i><sub>water</sub> differ, the gap is not zero, evaporation and condensation do not balance, and the integral keeps accumulating: every second of gap adds a little more water to the air, or takes a little back, so the liquid and gas curves keep moving. The total moved is the <strong>area under the gap curve</strong>, not just its height — a short, wide gap and a long, narrow gap can accumulate exactly the same change.</p>
+        <p>When the temperatures converge — <i>T</i><sub>air</sub> = <i>T</i><sub>water</sub> = <i>T<sub>s</sub></i>, the oscillating curves on the zoomed graph settling onto each other — the gap goes to zero, evaporation balances condensation, and the integrand switches off. The integral stops accumulating, so the partition settles where it is: at <strong>the split belonging to that temperature</strong>, the one the equilibrium graph at the top of this tab reads off. Change the temperature again and the whole sequence restarts: new surface temperature, new saturation point, new target split — and a fresh gap on the temperature graph driving a fresh stretch of accumulation on the amounts graph.</p>
+        <p>So read the two graphs in that order. <strong>Temperature graph first:</strong> how big is the gap, which way does it point, how fast is it closing — the driver, in degrees, right now. <strong>Liquid/gas graph second:</strong> how much that driver has added up to so far — the integral, in percent, over the whole history. The driver can be back near zero while the amounts are still far from where they started, because the integral remembers everything the gap has done.</p>
+
+        <h3 id="w-vocabulary">9. Signals, filters, and simplifications — the vocabulary in this system</h3>
+        <p>The same two classifications used for system diagrams apply here: <strong>signals</strong> and <strong>filters</strong>. The definitions below are the vocabulary this note concludes with — the same words, carried into this system.</p>
+        <p><strong>Signal</strong> — a quantity that carries change through a system: it has a value that varies — with time, with position, or with both — and a system diagram is, in large part, a picture of what happens to its signals. In this system the signals are <i>T</i><sub>air</sub>, <i>T</i><sub>water</sub>, the gap of the surface from its equilibrium, and the two amounts, H<sub>2</sub>O liquid and H<sub>2</sub>O gas. Signals are classified by the shape of that variation.</p>
+        <p><strong>Filter</strong> — a part of a system that a signal passes through and is changed by: part of the signal gets through, part is attenuated or held back, so the signal that comes out is a reshaped version of the signal that went in. A filter is classified by what it lets through and what it cuts off, and by where its cutoff point falls.</p>
+        <p><strong>Thermodynamic filter</strong> — our name, for system diagrams, for a filter whose filtering is done by a thermodynamic process rather than by an electronic component. In this system it is distance through the air, and then through the water, acting on temperature: the temperature signal leaves the panel at full strength, passes nearly whole near the top, breaks at the cutoff point, and is attenuated with distance below it — through the surface and down through the water as well as through the air above it. In electronics language it is modelled well as a low-pass filter; in our classification it is a thermodynamic filter.</p>
+        <p><strong>Oscillator</strong> — the first subclass of signal. An oscillator is a signal that swings around a target or equilibrium value — overshooting it, coming back, and, if it is damped, settling onto it in swings that get smaller. That is the underlying kind of signal in this system: <i>T</i><sub>air</sub> and <i>T</i><sub>water</sub> swing around <i>T<sub>s</sub></i>, the surface swings around the water level for the new saturation point, and the liquid/gas split swings around its target split. The spring model produces an oscillator: a mechanical spring is the parallel that got us there, and a capacitor charging and discharging is an electrical parallel for the same kind of settling behaviour, but the classification names the signal, not the parallel. Many of the signals we will deal with will be oscillators.</p>
+        <p><strong>Exponential, linear and constant signals here are simplifications of oscillator signals.</strong> Several of the signals drawn and written in this note are shown in a simpler shape than the oscillator underneath — and in every case the simpler shape is got by removing part of the oscillator, not by the system changing kind:</p>
+        <p><strong>Exponential — the envelope with the swing removed.</strong> The white dashed Newton exponentials behind the live <i>T</i><sub>air</sub> / <i>T</i><sub>water</sub> graph, and the simple solution <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T</i><sub>0</sub>) <i>e</i><sup>−<i>kt</i></sup>, are simplifications. The full damped response is <i>u</i>(<i>t</i>) = <i>A e</i><sup>−<i>t</i>/τ</sup> cos(ω<sub><i>d</i></sub> <i>t</i> + φ) — an oscillation inside a decaying envelope. Keep the envelope <i>e</i><sup>−<i>t</i>/τ</sup> and drop the cos term — the swing — and what is left is the exponential. The exponential is the oscillator with its wiggle deleted.</p>
+        <p><strong>Constant — the settled limit with the travel removed.</strong> A signal drawn as constant — flat at its steady-state value, the target line at <i>T<sub>s</sub></i>, or the liquid/gas split drawn at its equilibrium value for each temperature in the H<sub>2</sub>O graph at the top of this tab — is a simplification. It shows only where the oscillator ends up, after its swings have died away, and removes the travel: the overshoot and settling by which the surface and the partition actually get there. The flat dashed H<sub>2</sub>O total line is exact for a sealed tank — the total really does not change — but it must not be read as the components being constant: H<sub>2</sub>O liquid and H<sub>2</sub>O gas underneath it are oscillators, mirroring each other around their target split while their sum stays still.</p>
+        <p><strong>Linear — the straight-line approximation with the swing removed.</strong> Where a relation here is written as linear — a flow proportional to a gap, d<i>T</i>/d<i>t</i> = <i>k</i>·(gap), or the spring's restoring pull taken as proportional to how far the surface is disturbed — that straight-line form is a simplification. It is a good local approximation to the push acting at one moment, but the signal that push produces over time is not a straight-line journey to the target: driven by that push, the surface and the temperatures overshoot, come back, and settle — an oscillator again.</p>
+        <p><strong>Linear signal</strong> — for contrast, a signal whose variation really is proportional and straight-line — double the input and you double the change, with no swing around a target and no cutoff. That is a different underlying kind, and the diagram should say so when it is dealing with one. The signals in this system are not that kind: when one of them is shown as linear, it is the approximation that is linear, not the signal.</p>
+        <p>So, to fix the vocabulary here as well: we have two classifications — <strong>signals</strong> and <strong>filters</strong>. Under signals, our first subclass is the <strong>oscillator</strong>, and the main signals of this system — the two temperatures, the surface, and the liquid/gas split — are oscillators. The temperature distribution through the air and the water, modelled well as a low-pass filter, is classified here as a <strong>thermodynamic filter</strong>. And any signal in this note shown as <strong>exponential, linear or constant</strong> is a simplification of an underlying oscillator signal: the exponential keeps its envelope, the constant keeps its settled value, the linear keeps its local push — each one leaves the swing out.</p>
+      </div>
+    </section>
+
+    <!-- ============ SPECIFICATIONS ============ -->
+    <section id="view-specs" role="tabpanel" aria-labelledby="tab-specs" hidden>
+      <div class="subtabs" role="tablist" aria-label="Specification sheets">
+        <button class="subtab" role="tab" id="sub-terrarium" aria-selected="true" aria-controls="spec-terrarium">Terrarium</button>
+        <button class="subtab" role="tab" id="sub-panel" aria-selected="false" aria-controls="spec-panel">Heating Panel</button>
+      </div>
+
+      <!-- Terrarium spec -->
+      <div id="spec-terrarium" role="tabpanel" aria-labelledby="sub-terrarium">
+        <div class="specgrid">
+          <div class="drawing">
+            <svg viewBox="0 0 460 340" role="img" aria-label="Technical drawing: front and top views of the terrarium with dimensions">
+              <g stroke="var(--ink)" fill="none" stroke-width="1.6">
+                <rect x="70" y="60" width="300" height="150"/>
+                <rect x="145" y="46" width="150" height="14"/>
+              </g>
+              <g stroke="var(--muted)" stroke-width="1">
+                <line x1="70" y1="228" x2="370" y2="228"/><line x1="70" y1="222" x2="70" y2="234"/><line x1="370" y1="222" x2="370" y2="234"/>
+                <line x1="388" y1="60" x2="388" y2="210"/><line x1="382" y1="60" x2="394" y2="60"/><line x1="382" y1="210" x2="394" y2="210"/>
+                <line x1="145" y1="32" x2="295" y2="32"/><line x1="145" y1="26" x2="145" y2="38"/><line x1="295" y1="26" x2="295" y2="38"/>
+              </g>
+              <g font-size="12" fill="var(--ink)" text-anchor="middle">
+                <text x="220" y="246">600</text>
+                <text x="404" y="139">300</text>
+                <text x="220" y="24">300 (panel)</text>
+                <text x="220" y="140" fill="var(--muted)">FRONT</text>
+              </g>
+              <g stroke="var(--ink)" fill="none" stroke-width="1.6">
+                <rect x="70" y="272" width="300" height="52"/>
+                <rect x="145" y="282" width="150" height="32"/>
+              </g>
+              <g font-size="12" fill="var(--ink)" text-anchor="middle">
+                <text x="404" y="302">300</text>
+                <text x="220" y="302" fill="var(--muted)">TOP</text>
+              </g>
+              <g stroke="var(--muted)" stroke-width="1">
+                <line x1="388" y1="272" x2="388" y2="324"/><line x1="382" y1="272" x2="394" y2="272"/><line x1="382" y1="324" x2="394" y2="324"/>
+              </g>
+            </svg>
+            <div class="cap">All dimensions in mm. Panel centred on the lid, both axes.</div>
+          </div>
+          <div class="stack">
+            <table class="spec">
+              <caption>Geometry</caption>
+              <tr><th>Internal L × W × H</th><td>600 × 300 × 300 mm</td></tr>
+              <tr><th>External L × W × H</th><td>608 × 308 × 304 mm</td></tr>
+              <tr><th>Glass thickness</th><td>4 mm</td></tr>
+              <tr><th>Internal volume</th><td>0.0540 m³ (54.0 L)</td></tr>
+              <tr><th>Contents</th><td>Air only — empty</td></tr>
+              <tr><th>Panel position</th><td>Top centre of lid, centred on both axes</td></tr>
+            </table>
+            <table class="spec">
+              <caption>Materials</caption>
+              <tr><th>Walls &amp; lid</th><td>Soda-lime glass, 4 mm</td></tr>
+              <tr><th>Joints</th><td>Silicone sealant, continuous</td></tr>
+            </table>
+            <p class="note">Idealised container: sealed — no heat loss, no water loss, no leaks. Walls are treated as perfectly insulating in the model.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heating panel spec -->
+      <div id="spec-panel" role="tabpanel" aria-labelledby="sub-panel" hidden>
+        <div class="specgrid">
+          <div class="drawing">
+            <svg viewBox="0 0 460 340" role="img" aria-label="Technical drawing: top and side views of the heating panel with dimensions">
+              <g stroke="var(--ink)" fill="none" stroke-width="1.6">
+                <rect x="80" y="50" width="300" height="200"/>
+              </g>
+              <g stroke="var(--muted)" stroke-width="1" stroke-dasharray="5 4">
+                <rect x="92" y="62" width="276" height="176" fill="none"/>
+              </g>
+              <g stroke="var(--muted)" stroke-width="1">
+                <line x1="80" y1="268" x2="380" y2="268"/><line x1="80" y1="262" x2="80" y2="274"/><line x1="380" y1="262" x2="380" y2="274"/>
+                <line x1="398" y1="50" x2="398" y2="250"/><line x1="392" y1="50" x2="404" y2="50"/><line x1="392" y1="250" x2="404" y2="250"/>
+              </g>
+              <g font-size="12" fill="var(--ink)" text-anchor="middle">
+                <text x="230" y="286">300</text>
+                <text x="416" y="154">200</text>
+                <text x="230" y="154" fill="var(--muted)">TOP — dashed line: heating element inset 12 mm</text>
+              </g>
+              <g stroke="var(--ink)" fill="none" stroke-width="1.6">
+                <rect x="80" y="306" width="300" height="6"/>
+              </g>
+              <g font-size="12" fill="var(--ink)">
+                <text x="392" y="313">3 thick</text>
+                <text x="80" y="330" fill="var(--muted)">SIDE</text>
+              </g>
+            </svg>
+            <div class="cap">All dimensions in mm. Modelled on a commercial vivarium heating pad of the 8″ × 12″, 24 W class, re-mounted flat at the top centre of the lid, element facing down.</div>
+          </div>
+          <div class="stack">
+            <table class="spec">
+              <caption>Geometry</caption>
+              <tr><th>Panel L × W × thickness</th><td>300 × 200 × 3 mm</td></tr>
+              <tr><th>Heating area</th><td>0.0600 m² (element inset 12 mm from each edge)</td></tr>
+              <tr><th>Mounting</th><td>Flat on lid, top centre, centred on both axes</td></tr>
+              <tr><th>Type</th><td>Resistive carbon-film pad</td></tr>
+            </table>
+            <table class="spec">
+              <caption>Thermostat</caption>
+              <tr><th>Control range</th><td>20 – 50 °C (68 – 122 °F)</td></tr>
+              <tr><th>Display range</th><td>0 – 50 °C</td></tr>
+              <tr><th>Accuracy</th><td>±1 °C (±2 °F)</td></tr>
+              <tr><th>Setpoint resolution</th><td>0.5 °C (this model's slider)</td></tr>
+              <tr><th>Control mode</th><td>PID, probe sensor</td></tr>
+            </table>
+            <table class="spec">
+              <caption>Power</caption>
+              <tr><th>Rated power</th><td>24 W</td></tr>
+              <tr><th>Supply</th><td>120 V AC, 60 Hz</td></tr>
+              <tr><th>Power density</th><td>400 W/m²</td></tr>
+              <tr><th>Efficiency</th><td>η ≈ 0.90 delivered into the tank air (film converts ≈ 98% of electrical input to heat; the rest is lost at the lid)</td></tr>
+            </table>
+            <p class="note">Scaling rule: if the panel is scaled up, power scales with area at the same 400 W/m² and the same efficiency.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
