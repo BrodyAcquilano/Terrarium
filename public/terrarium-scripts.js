@@ -362,19 +362,10 @@
         ctx.fillStyle = distColors[i];
         ctx.beginPath(); ctx.arc(X(0.5), Y(thH), cur ? 4.4 : 3.2, 0, Math.PI * 2); ctx.fill();
       });
-      /* Bode straight-line (asymptotic) approximation, drawn OVER the curves:
-         a horizontal dashed segment along the top (theta = 1) up to the
-         corner at H/2, then a straight dashed segment downward after it.
-         The corner where the two segments meet is the cutoff point. */
-      var ink = cssVar('--ink');
-      var cutX = X(0.5), cutY = Y(1);
-      ctx.strokeStyle = ink; ctx.setLineDash([8, 5]); ctx.lineWidth = 2.4;
-      ctx.beginPath(); ctx.moveTo(padL, cutY); ctx.lineTo(cutX, cutY); ctx.lineTo(X(1), Y(0.02)); ctx.stroke();
-      ctx.setLineDash([]); ctx.lineWidth = 1;
-      ctx.fillStyle = ink;
-      ctx.beginPath(); ctx.arc(cutX, cutY, 4.6, 0, Math.PI * 2); ctx.fill();
-      ctx.font = 'bold 12.5px sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText('cutoff point', cutX - 10, cutY + 17);
+      /* No Bode overlay is drawn over these curves: on this log-theta scale
+         each spatial exponential is ONE straight line — no flat section,
+         no corner. The flat-then-down Bode shape belongs to the frequency
+         response, not to the spatial distribution (note, section 9). */
       ctx.font = '11px sans-serif';
       ctx.fillStyle = muted; ctx.textAlign = 'center';
       ctx.fillText('height — linear', padL + iw / 2, H - 4);
@@ -1232,7 +1223,7 @@
     var D = 0.47; /* delta/H for the exponential shown */
     function thetaExp(zf){ var eH = Math.exp(-1 / D); return (Math.exp(-zf / D) - eH) / (1 - eH); }
 
-    /* ----- filter distribution again: simplest / linear / exponential / Bode ----- */
+    /* ----- filter distribution again: simplest / linear / exponential ----- */
     function drawFilter(){
       var f = fitC(cF), ctx = f.ctx, W = f.w, H = f.h;
       var muted = cssVar('--muted'), line = cssVar('--line'), ink = cssVar('--ink'), heat = cssVar('--heat');
@@ -1259,17 +1250,12 @@
       ctx.strokeStyle = heat; ctx.lineWidth = 2.6; ctx.beginPath();
       for (var k = 0; k <= 60; k++){ var zf = k / 60; k ? ctx.lineTo(X(zf), Y(thetaExp(zf))) : ctx.moveTo(X(zf), Y(thetaExp(zf))); }
       ctx.stroke();
-      /* Bode approximation: flat at 1 to H/2, then straight down to theta(H) region */
-      ctx.strokeStyle = ink; ctx.setLineDash([8, 5]); ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(0.5), Y(1)); ctx.lineTo(X(1), Y(0.04)); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(X(0.5), Y(1), 4.4, 0, Math.PI * 2); ctx.fill();
-      ctx.font = 'bold 11.5px sans-serif'; ctx.textAlign = 'left';
-      ctx.fillText('cutoff point', X(0.5) + 8, Y(1) + 4);
+      /* No Bode overlay on this spatial graph: the flat-then-down Bode
+         shape belongs to the frequency response, not to distance. */
       /* labels */
       ctx.font = '11.5px sans-serif';
       ctx.fillStyle = blue; ctx.fillText('simplest / linear filter — full heat to H/2, then straight down', padL + 6, padT + 14);
       ctx.fillStyle = heat; ctx.fillText('exponential — more accurate', padL + 6, padT + ih - 8);
-      ctx.fillStyle = ink; ctx.fillText('Bode — dashed', X(0.72), Y(0.42));
       void green;
     }
 
@@ -1349,8 +1335,6 @@
         ctx.strokeStyle = heat; ctx.lineWidth = 2.2; ctx.beginPath();
         for (var k = 0; k <= 50; k++){ var zf = k / 50; k ? ctx.lineTo(X(zf), Y(thetaExp(zf))) : ctx.moveTo(X(zf), Y(thetaExp(zf))); }
         ctx.stroke();
-        ctx.strokeStyle = ink; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(0.5), Y(1)); ctx.lineTo(X(1), Y(0.04)); ctx.stroke(); ctx.setLineDash([]);
         var zd = 0.62, thd = thetaExp(zd);
         ctx.strokeStyle = muted; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(X(zd), padT + 8); ctx.lineTo(X(zd), Y(thd)); ctx.lineTo(x0 + 8, Y(thd)); ctx.stroke(); ctx.setLineDash([]);
