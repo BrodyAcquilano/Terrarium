@@ -561,36 +561,36 @@
 
       <h2 class="sec" id="note-system">System diagram — temperature over time at position x</h2>
       <div class="letter">
-        <p>The system above, drawn as block diagrams in the <strong>shorthand notation</strong> — <strong>two</strong> of them. The word-label and graph versions of the same system are in section 10, before the shorthand definitions; these two diagrams are those versions simplified into circles. First, the <strong>complex diagram</strong>: it contains <strong>everything the simplified diagram has</strong> — every block of the shorthand chain, in the same order, with nothing in between removed — <strong>plus the extra symbols and steps</strong> the simplified one leaves out. It does <strong>not assume the Bode plot</strong>: it shows the extra branch where the transform is converted, with the <strong>Bode Plot Converter</strong> sitting above the attenuator — and it shows the fuller pad signal, <i>T<sub>H</sub></i>(<i>x</i>), the position part, <strong>adding</strong> with <i>T<sub>H</sub></i>(<i>t</i>), the time part, to give <i>T<sub>H</sub></i>(<i>t</i>) again — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the output of the adding is an oscillator that just becomes <i>T<sub>H</sub></i>(<i>t</i>) again — as an extra step inside the chain rather than instead of any of it. Then, the <strong>simplified diagram</strong> — the shorthand chain, the whole process in its simplest, purest form — where those extra steps are no longer drawn. The final output is <strong><i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i></strong>.</p>
+        <p>The system above, drawn as block diagrams in the <strong>shorthand notation</strong> — <strong>two</strong> of them. The word-label and graph versions of the same system are in section 10, before the shorthand definitions; these two diagrams are those versions simplified into circles. First, the <strong>complex diagram</strong>: it contains <strong>everything the simplified diagram has</strong> — every block of the shorthand chain, in the same order, with nothing in between removed — <strong>plus the extra symbols and steps</strong> the simplified one leaves out. It does <strong>not assume the Bode plot</strong>: it shows the extra branch where the transform is converted, with the <strong>Bode Plot Converter</strong> sitting above the attenuator — and it shows the fuller pad signal, <i>T<sub>H</sub></i>(<i>x</i>), the position part, <strong>adding</strong> with <i>T<sub>H</sub></i>(<i>t</i>), the time part, at the adder, followed by another <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>) — as an extra step inside the chain rather than instead of any of it. Then, the <strong>simplified diagram</strong> — the shorthand chain, the whole process in its simplest, purest form — where those extra steps are no longer drawn. The final output is <strong><i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i></strong>.</p>
         <h3>The complex diagram — everything in the simplified diagram, plus T<sub>H</sub>(x) + T<sub>H</sub>(t) and the transform converted above the attenuator</h3>
-        <p>First, the complex diagram — the full system in the shorthand symbols of section 10. Read it against the simplified diagram below: <strong>every block of that chain is here, in the same place and the same order</strong> — <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i>, the difference operator, the Boltzmann block, the oscillator block for <i>T<sub>H</sub></i>(<i>t</i>) before the medium change, the medium change, the oscillator block for <i>T</i><sub>air</sub>(<i>t</i>) after it, the envelope signal converter, the exponential signal after the envelope signal converter, the mixer, the exponential signal after the mixer, the steady-state filter and the constant signal — and the extra symbols and steps are <strong>added into</strong> that chain, not swapped in for parts of it. The extras are two: the <strong>adder</strong>, where <i>T<sub>H</sub></i>(<i>x</i>) adds with the oscillator <i>T<sub>H</sub></i>(<i>t</i>) to give <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the output of the adding is an oscillator that just becomes <i>T<sub>H</sub></i>(<i>t</i>) again; and the conversion branch above the attenuator, where the Bode plot is <strong>not assumed</strong> — the transform starts in its exponential form, and the Bode Plot Converter converts it before the attenuator feeds the mixer. Showing the <i>T<sub>H</sub></i>(<i>x</i>) step here is what justifies omitting it in the simplified diagram: because <i>T<sub>H</sub></i>(<i>x</i>) is constant, adding it just gives back the <i>T<sub>H</sub></i>(<i>t</i>) oscillator.</p>
+        <p>First, the complex diagram — the full system in the shorthand symbols of section 10. Read it against the simplified diagram below: <strong>every block of that chain is here, in the same place and the same order</strong> — <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i>, the difference operator, the Boltzmann block, the oscillator block for <i>T<sub>H</sub></i>(<i>t</i>) before the medium change, the medium change, the oscillator block for <i>T</i><sub>air</sub>(<i>t</i>) after it, the envelope signal converter, the exponential signal after the envelope signal converter, the mixer, the exponential signal after the mixer, the steady-state filter and the constant signal — and the extra symbols and steps are <strong>added into</strong> that chain, not swapped in for parts of it. The extras are two: the <strong>adder</strong>, where <i>T<sub>H</sub></i>(<i>x</i>) adds with the oscillator <i>T<sub>H</sub></i>(<i>t</i>), followed by another <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>); and the conversion branch above the attenuator, where the Bode plot is <strong>not assumed</strong> — the transform starts in its exponential form, and the Bode Plot Converter converts it before the attenuator feeds the mixer. Showing the <i>T<sub>H</sub></i>(<i>x</i>) step here is what justifies omitting it in the simplified diagram: because <i>T<sub>H</sub></i>(<i>x</i>) is constant, adding it just gives back the <i>T<sub>H</sub></i>(<i>t</i>) oscillator — in the simplified diagram there is no adder, so that step is simply skipped.</p>
         <div class="fig">
-          <svg viewBox="0 0 1440 396" role="img" aria-label="Complex block diagram: the whole simplified shorthand chain with the extra steps added into it, nothing removed. T o, the previous steady-state value, and T s, the slider setting, stacked on the left, feed a difference operator, which produces the difference signal; then a Boltzmann distribution block, near the input; then an oscillator block — a circle with one cycle of a sine wave — the signal T H of t, the time part of the pad signal, before the medium change; then an adder, where T H of x, the position part, drawn as a constant signal — a circle with a straight line through its centre — feeding in from above, adds with T H of t to give T H of t again, an oscillator, because T H of x is constant; then a medium change block; then a second oscillator block — a circle with one cycle of a sine wave — the signal T air of t in the air, after the medium change; then an envelope signal converter — the envelope operator; then an exponential signal block, the exponential signal the converter puts out; then a mixer, multiplying that exponential by the attenuation alpha of x; then an exponential signal block, T air of t at position x, after the mixer; then a steady-state filter, keeping only t at or after t s; and finally a constant signal block, T air at x and t at or after t s. Above the mixer sits the conversion branch above the attenuator: at the top an exponential transform circle — attenuation over distance as an exponential decay in space — then an arrow down to the Bode Plot Converter circle — a transform converter for attenuation — which converts the exponential decay into its piecewise linear Bode form; then an arrow down to the attenuator circle — the Bode plot — which feeds down into the mixer, where the time signal runs through the attenuation and alpha of x multiplies">
+          <svg viewBox="0 0 1540 396" role="img" aria-label="Complex block diagram: the whole simplified shorthand chain with the extra steps added into it, nothing removed. T o, the previous steady-state value, and T s, the slider setting, stacked on the left, feed a difference operator, which produces the difference signal; then a Boltzmann distribution block, near the input; then an oscillator block — a circle with one cycle of a sine wave — the signal T H of t, the time part of the pad signal, before the medium change; then an adder, where T H of x, the position part, drawn as a constant signal — a circle with a straight line through its centre — feeding in from above, adds with T H of t to give T H of t again, an oscillator, because T H of x is constant; then another oscillator block — a circle with one cycle of a sine wave — the signal T H of t again after the adder, because x is constant, before the medium change; then a medium change block; then another oscillator block — a circle with one cycle of a sine wave — the signal T air of t in the air, after the medium change; then an envelope signal converter — the envelope operator; then an exponential signal block, the exponential signal the converter puts out; then a mixer, multiplying that exponential by the attenuation alpha of x; then an exponential signal block, T air of t at position x, after the mixer; then a steady-state filter, keeping only t at or after t s; and finally a constant signal block, T air at x and t at or after t s. Above the mixer sits the conversion branch above the attenuator: at the top an exponential transform circle — attenuation over distance as an exponential decay in space — then an arrow down to the Bode Plot Converter circle — a transform converter for attenuation — which converts the exponential decay into its piecewise linear Bode form; then an arrow down to the attenuator circle — the Bode plot — which feeds down into the mixer, where the time signal runs through the attenuation and alpha of x multiplies">
             <defs>
               <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
-              <clipPath id="cxClipMed"><circle cx="540" cy="320" r="22"/></clipPath>
+              <clipPath id="cxClipMed"><circle cx="640" cy="320" r="22"/></clipPath>
             </defs>
-            <text x="942" y="16" font-size="10.5" fill="var(--muted)" text-anchor="middle">the transform, converted — above the attenuator</text>
+            <text x="1042" y="16" font-size="10.5" fill="var(--muted)" text-anchor="middle">the transform, converted — above the attenuator</text>
             <!-- conversion branch, above the attenuator / mixer -->
-            <circle cx="942" cy="58" r="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M920 42 C934 44 944 50 950 60 C954 67 956 72 958 74" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
-            <circle cx="942" cy="146" r="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g stroke="var(--heat)" stroke-width="2.6" stroke-linecap="round"><line x1="918" y1="136" x2="942" y2="136"/><line x1="942" y1="156" x2="966" y2="156"/></g>
-            <circle cx="942" cy="234" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <polyline points="924,226 942,226 960,242" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <line x1="942" y1="218" x2="942" y2="250" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
+            <circle cx="1042" cy="58" r="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <path d="M1020 42 C1034 44 1044 50 1050 60 C1054 67 1056 72 1058 74" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
+            <circle cx="1042" cy="146" r="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <g stroke="var(--heat)" stroke-width="2.6" stroke-linecap="round"><line x1="1018" y1="136" x2="1042" y2="136"/><line x1="1042" y1="156" x2="1066" y2="156"/></g>
+            <circle cx="1042" cy="234" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <polyline points="1024,226 1042,226 1060,242" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
+            <line x1="1042" y1="218" x2="1042" y2="250" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
             <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <line x1="942" y1="86" x2="942" y2="114" marker-end="url(#arrC)"/>
-              <line x1="942" y1="174" x2="942" y2="206" marker-end="url(#arrC)"/>
-              <line x1="942" y1="258" x2="942" y2="292" marker-end="url(#arrC)"/>
+              <line x1="1042" y1="86" x2="1042" y2="114" marker-end="url(#arrC)"/>
+              <line x1="1042" y1="174" x2="1042" y2="206" marker-end="url(#arrC)"/>
+              <line x1="1042" y1="258" x2="1042" y2="292" marker-end="url(#arrC)"/>
             </g>
             <g font-size="11" fill="var(--ink)">
-              <text x="982" y="56" font-weight="700">EXPONENTIAL TRANSFORM</text>
-              <text x="982" y="72" font-size="10.5" fill="var(--muted)">attenuation over distance — exponential decay in space</text>
-              <text x="982" y="144" font-weight="700">BODE PLOT CONVERTER</text>
-              <text x="982" y="160" font-size="10.5" fill="var(--muted)">a transform converter for attenuation — exponential decay → piecewise linear (Bode)</text>
-              <text x="982" y="232" font-weight="700">ATTENUATOR</text>
-              <text x="982" y="248" font-size="10.5" fill="var(--muted)">Bode plot — the converted transform, α(x)</text>
+              <text x="1082" y="56" font-weight="700">EXPONENTIAL TRANSFORM</text>
+              <text x="1082" y="72" font-size="10.5" fill="var(--muted)">attenuation over distance — exponential decay in space</text>
+              <text x="1082" y="144" font-weight="700">BODE PLOT CONVERTER</text>
+              <text x="1082" y="160" font-size="10.5" fill="var(--muted)">a transform converter for attenuation — exponential decay → piecewise linear (Bode)</text>
+              <text x="1082" y="232" font-weight="700">ATTENUATOR</text>
+              <text x="1082" y="248" font-size="10.5" fill="var(--muted)">Bode plot — the converted transform, α(x)</text>
             </g>
             <!-- T_H(x) feed, from above the adder -->
             <text x="440" y="176" font-size="10" fill="var(--muted)" text-anchor="middle">position part — constant</text>
@@ -619,19 +619,21 @@
               <line x1="568" y1="320" x2="612" y2="320" marker-end="url(#arrC)"/>
               <line x1="668" y1="320" x2="712" y2="320" marker-end="url(#arrC)"/>
               <line x1="768" y1="320" x2="812" y2="320" marker-end="url(#arrC)"/>
-              <line x1="870" y1="320" x2="914" y2="320" marker-end="url(#arrC)"/>
+              <line x1="868" y1="320" x2="914" y2="320" marker-end="url(#arrC)"/>
               <line x1="970" y1="320" x2="1014" y2="320" marker-end="url(#arrC)"/>
               <line x1="1070" y1="320" x2="1114" y2="320" marker-end="url(#arrC)"/>
               <line x1="1170" y1="320" x2="1214" y2="320" marker-end="url(#arrC)"/>
-              <line x1="1270" y1="320" x2="1284" y2="320" marker-end="url(#arrC)"/>
+              <line x1="1270" y1="320" x2="1314" y2="320" marker-end="url(#arrC)"/>
+              <line x1="1370" y1="320" x2="1384" y2="320" marker-end="url(#arrC)"/>
             </g>
             <!-- signal labels above the main arrows -->
             <g font-size="10" fill="var(--muted)" text-anchor="middle">
               <text x="190" y="302">ΔT signal</text>
               <text x="490" y="302">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t)</text>
-              <text x="790" y="302">exponential</text>
-              <text x="992" y="302">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
-              <text x="1192" y="302">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
+              <text x="590" y="302">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t)</text>
+              <text x="890" y="302">exponential</text>
+              <text x="1092" y="302">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
+              <text x="1292" y="302">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
             </g>
             <!-- 1 difference -->
             <circle cx="140" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
@@ -646,39 +648,42 @@
             <!-- 4 adder (extra step) -->
             <circle cx="440" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
             <g stroke="var(--ink)" stroke-width="2.6"><line x1="428" y1="320" x2="452" y2="320"/><line x1="440" y1="308" x2="440" y2="332"/></g>
-            <!-- 5 medium change -->
+            <!-- 5 oscillator — T_H(t) again, after the adder, before the medium change -->
             <circle cx="540" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g clip-path="url(#cxClipMed)" stroke="var(--ink)" stroke-width="1.8">
-              <line x1="516" y1="296" x2="564" y2="344"/><line x1="522" y1="291" x2="569" y2="338"/><line x1="511" y1="302" x2="558" y2="349"/>
-              <line x1="564" y1="296" x2="516" y2="344"/><line x1="569" y1="302" x2="522" y2="349"/><line x1="558" y1="291" x2="511" y2="338"/>
-            </g>
-            <circle cx="540" cy="320" r="24" fill="none" stroke="var(--ink)" stroke-width="2"/>
-            <!-- 6 oscillator — T_air(t), after the medium change -->
+            <path d="M521 320 C526 305 531 305 535 320 C539 335 544 335 548 320 C551 309 555 309 559 320" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
+            <!-- 6 medium change -->
             <circle cx="640" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M621 320 C626 305 631 305 635 320 C639 335 644 335 648 320 C651 309 655 309 659 320" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <!-- 7 envelope signal converter (envelope operator) -->
+            <g clip-path="url(#cxClipMed)" stroke="var(--ink)" stroke-width="1.8">
+              <line x1="616" y1="296" x2="664" y2="344"/><line x1="622" y1="291" x2="669" y2="338"/><line x1="611" y1="302" x2="658" y2="349"/>
+              <line x1="664" y1="296" x2="616" y2="344"/><line x1="669" y1="302" x2="622" y2="349"/><line x1="658" y1="291" x2="611" y2="338"/>
+            </g>
+            <circle cx="640" cy="320" r="24" fill="none" stroke="var(--ink)" stroke-width="2"/>
+            <!-- 7 oscillator — T_air(t), after the medium change -->
             <circle cx="740" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g fill="none" stroke="var(--heat)" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"><path d="M740 299 Q743 317 761 320"/><path d="M761 320 Q743 323 740 341"/><path d="M740 341 Q737 323 719 320"/><path d="M719 320 Q737 317 740 299"/></g>
-            <!-- 8 exponential signal, after the envelope converter -->
-            <circle cx="842" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M817 337 C833 337 843 335 851 327 C858 320 862 311 864 305 L867 305" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
-            <!-- 9 mixer -->
+            <path d="M721 320 C726 305 731 305 735 320 C739 335 744 335 748 320 C751 309 755 309 759 320" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
+            <!-- 8 envelope signal converter (envelope operator) -->
+            <circle cx="840" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <g fill="none" stroke="var(--heat)" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"><path d="M840 299 Q843 317 861 320"/><path d="M861 320 Q843 323 840 341"/><path d="M840 341 Q837 323 819 320"/><path d="M819 320 Q837 317 840 299"/></g>
+            <!-- 9 exponential signal, after the envelope converter -->
             <circle cx="942" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g stroke="var(--ink)" stroke-width="2.4"><line x1="931" y1="309" x2="953" y2="331"/><line x1="953" y1="309" x2="931" y2="331"/></g>
-            <!-- 10 exponential signal, after the mixer -->
+            <path d="M917 337 C933 337 943 335 951 327 C958 320 962 311 964 305 L967 305" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
+            <!-- 10 mixer -->
             <circle cx="1042" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M1017 337 C1033 337 1043 335 1051 327 C1058 320 1062 311 1064 305 L1067 305" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
-            <!-- 11 steady-state filter -->
+            <g stroke="var(--ink)" stroke-width="2.4"><line x1="1031" y1="309" x2="1053" y2="331"/><line x1="1053" y1="309" x2="1031" y2="331"/></g>
+            <!-- 11 exponential signal, after the mixer -->
             <circle cx="1142" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M1131 305 H1153 L1142 320 L1153 335 H1131 L1142 320 Z" fill="none" stroke="var(--ink)" stroke-width="2"/>
-            <!-- 12 constant signal -->
+            <path d="M1117 337 C1133 337 1143 335 1151 327 C1158 320 1162 311 1164 305 L1167 305" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
+            <!-- 12 steady-state filter -->
             <circle cx="1242" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <line x1="1222" y1="320" x2="1262" y2="320" stroke="var(--heat)" stroke-width="2.4"/>
+            <path d="M1231 305 H1253 L1242 320 L1253 335 H1231 L1242 320 Z" fill="none" stroke="var(--ink)" stroke-width="2"/>
+            <!-- 13 constant signal -->
+            <circle cx="1342" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <line x1="1322" y1="320" x2="1362" y2="320" stroke="var(--heat)" stroke-width="2.4"/>
             <!-- output -->
             <g font-size="12" fill="var(--ink)">
-              <text x="1292" y="316" font-weight="700">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and</text>
-              <text x="1292" y="332" font-size="10.5" fill="var(--muted)">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan> — constant,</text>
-              <text x="1292" y="346" font-size="10.5" fill="var(--muted)">steady state</text>
+              <text x="1392" y="316" font-weight="700">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and</text>
+              <text x="1392" y="332" font-size="10.5" fill="var(--muted)">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan> — constant,</text>
+              <text x="1392" y="346" font-size="10.5" fill="var(--muted)">steady state</text>
             </g>
             <!-- block labels below -->
             <g font-size="10" fill="var(--ink)" text-anchor="middle">
@@ -690,25 +695,27 @@
               <text x="340" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t) — oscillator</text>
               <text x="440" y="362" font-weight="700">ADDER ⊕</text>
               <text x="440" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">H</tspan>(x) + T<tspan baseline-shift="sub" font-size="8">H</tspan>(t)</text>
-              <text x="540" y="362" font-weight="700">MEDIUM CHANGE</text>
-              <text x="540" y="376" fill="var(--muted)">pad → air</text>
-              <text x="640" y="362" font-weight="700">OSCILLATOR</text>
-              <text x="640" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) — oscillator</text>
-              <text x="740" y="362" font-weight="700" font-size="9.5">ENVELOPE CONVERTER</text>
-              <text x="740" y="376" fill="var(--muted)">envelope operator</text>
-              <text x="842" y="362" font-weight="700" font-size="9.5">EXPONENTIAL SIGNAL</text>
-              <text x="842" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t)</text>
-              <text x="942" y="362" font-weight="700">MIXER ⊗</text>
-              <text x="942" y="376" fill="var(--muted)">α(x) multiplies</text>
-              <text x="1042" y="362" font-weight="700" font-size="9.5">EXPONENTIAL SIGNAL</text>
-              <text x="1042" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
-              <text x="1142" y="362" font-weight="700" font-size="9.5">STEADY-STATE FILTER</text>
-              <text x="1142" y="376" fill="var(--muted)">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan> only</text>
-              <text x="1242" y="362" font-weight="700">CONSTANT SIGNAL</text>
-              <text x="1242" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
+              <text x="540" y="362" font-weight="700">OSCILLATOR</text>
+              <text x="540" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t) — oscillator</text>
+              <text x="640" y="362" font-weight="700">MEDIUM CHANGE</text>
+              <text x="640" y="376" fill="var(--muted)">pad → air</text>
+              <text x="740" y="362" font-weight="700">OSCILLATOR</text>
+              <text x="740" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) — oscillator</text>
+              <text x="840" y="362" font-weight="700" font-size="9.5">ENVELOPE CONVERTER</text>
+              <text x="840" y="376" fill="var(--muted)">envelope operator</text>
+              <text x="942" y="362" font-weight="700" font-size="9.5">EXPONENTIAL SIGNAL</text>
+              <text x="942" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t)</text>
+              <text x="1042" y="362" font-weight="700">MIXER ⊗</text>
+              <text x="1042" y="376" fill="var(--muted)">α(x) multiplies</text>
+              <text x="1142" y="362" font-weight="700" font-size="9.5">EXPONENTIAL SIGNAL</text>
+              <text x="1142" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
+              <text x="1242" y="362" font-weight="700" font-size="9.5">STEADY-STATE FILTER</text>
+              <text x="1242" y="376" fill="var(--muted)">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan> only</text>
+              <text x="1342" y="362" font-weight="700">CONSTANT SIGNAL</text>
+              <text x="1342" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
             </g>
           </svg>
-          <p class="figcap">The complex diagram — <strong>everything in the simplified diagram, in the same order, plus the extra steps</strong>; nothing in between is removed. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> stacked → <strong>difference operator</strong> → difference signal → <strong>Boltzmann</strong> (simplifications 1 and 2) → <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>), the time part of the pad signal. Then the first extra step: <i>T<sub>H</sub></i>(<i>x</i>) — the position part, drawn as a <strong>constant signal</strong> — <strong>adds</strong> with <i>T<sub>H</sub></i>(<i>t</i>) at the <strong>adder, ⊕</strong>, to give <i>T<sub>H</sub></i>(<i>t</i>) again — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the output of the adding is an oscillator that just becomes <i>T<sub>H</sub></i>(<i>t</i>) again. Then the rest of the simplified chain, unchanged: <strong>medium change</strong> (pad → air) → <strong>oscillator</strong> (sine wave): <i>T</i><sub>air</sub>(<i>t</i>) → <strong>envelope signal converter (envelope operator)</strong> → <strong>exponential signal</strong> → <strong>mixer, ⊗</strong> → <strong>exponential signal</strong> after the mixer, <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> → <strong>steady-state filter</strong> (only <i>t</i> ≥ <i>t<sub>s</sub></i>) → <strong>constant signal</strong>: <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>. The second extra step is the branch above the attenuator: the attenuation starts as the <strong>exponential transform</strong> — attenuation over distance as an exponential decay in space — and the <strong>Bode Plot Converter</strong>, a transform converter for attenuation, converts that exponential decay into the <strong>piecewise linear Bode form</strong> of the <strong>attenuator</strong>, which feeds down into the mixer, where the time signal runs through the attenuation and <strong>α(<i>x</i>) multiplies</strong>. And that is exactly why <i>T<sub>H</sub></i>(<i>x</i>) can be <strong>omitted in the simplified diagram</strong> below: because <i>T<sub>H</sub></i>(<i>x</i>) is constant, adding it to <i>T<sub>H</sub></i>(<i>t</i>) just gives back the <i>T<sub>H</sub></i>(<i>t</i>) oscillator — so leaving it out changes nothing. The complex diagram shows the step in full, so the omission in the simple diagram is justified: <i>T<sub>H</sub></i>(<i>x</i>) is shown here precisely to show that it just becomes <i>T<sub>H</sub></i>(<i>t</i>) again. The <strong>Bode Plot Converter</strong> is likewise omitted in the simplified diagram — its simplification is simply assumed there, and the attenuator is used directly in its Bode form — because the complex diagram here is the one that shows the converter branch and its conversion.</p>
+          <p class="figcap">The complex diagram — <strong>everything in the simplified diagram, in the same order, plus the extra steps</strong>; nothing in between is removed. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> stacked → <strong>difference operator</strong> → difference signal → <strong>Boltzmann</strong> (simplifications 1 and 2) → <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>), the time part of the pad signal. Then the first extra step: <i>T<sub>H</sub></i>(<i>x</i>) — the position part, drawn as a <strong>constant signal</strong> — <strong>adds</strong> with <i>T<sub>H</sub></i>(<i>t</i>) at the <strong>adder, ⊕</strong>, and after the adder there is another <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>) again, before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>). Then the rest of the simplified chain, unchanged: <strong>medium change</strong> (pad → air) → <strong>oscillator</strong> (sine wave): <i>T</i><sub>air</sub>(<i>t</i>) → <strong>envelope signal converter (envelope operator)</strong> → <strong>exponential signal</strong> → <strong>mixer, ⊗</strong> → <strong>exponential signal</strong> after the mixer, <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> → <strong>steady-state filter</strong> (only <i>t</i> ≥ <i>t<sub>s</sub></i>) → <strong>constant signal</strong>: <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>. The second extra step is the branch above the attenuator: the attenuation starts as the <strong>exponential transform</strong> — attenuation over distance as an exponential decay in space — and the <strong>Bode Plot Converter</strong>, a transform converter for attenuation, converts that exponential decay into the <strong>piecewise linear Bode form</strong> of the <strong>attenuator</strong>, which feeds down into the mixer, where the time signal runs through the attenuation and <strong>α(<i>x</i>) multiplies</strong>. And that is exactly why <i>T<sub>H</sub></i>(<i>x</i>) can be <strong>omitted in the simplified diagram</strong> below: because <i>T<sub>H</sub></i>(<i>x</i>) is constant, adding it to <i>T<sub>H</sub></i>(<i>t</i>) just gives back the <i>T<sub>H</sub></i>(<i>t</i>) oscillator — so leaving it out changes nothing. The complex diagram shows the step in full, so the omission in the simple diagram is justified: <i>T<sub>H</sub></i>(<i>x</i>) is shown here precisely to show that it just becomes <i>T<sub>H</sub></i>(<i>t</i>) again. The <strong>Bode Plot Converter</strong> is likewise omitted in the simplified diagram — its simplification is simply assumed there, and the attenuator is used directly in its Bode form — because the complex diagram here is the one that shows the converter branch and its conversion.</p>
         </div>
         <h3>The simplified diagram — the shorthand chain — T<sub>o</sub> and T<sub>s</sub> to T<sub>air</sub> at x and t ≥ t<sub>s</sub></h3>
         <p>Then, the same system simplified, in the <strong>shorthand notation</strong> defined in section 10 — the <strong>Bode Plot Converter</strong> is omitted here — its simplification is simply assumed, and the attenuator is used directly in its Bode form — and neither is the <i>T<sub>H</sub></i>(<i>x</i>) + <i>T<sub>H</sub></i>(<i>t</i>) input of the complex diagram: the attenuation is drawn straight away as the Bode low-pass circle. The complex diagram above is the one that shows the converter branch; the simplified diagram assumes it, and the input is <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i>: all the blocks drawn in a straight line, one after the other, each block a circle with its symbol inside. Read it left to right. <i>T<sub>o</sub></i> (the previous steady-state value) and <i>T<sub>s</sub></i> (the slider setting) are stacked on the left and feed the <strong>difference operator</strong>, which produces the difference signal. The <strong>Boltzmann</strong> block sits near the input, where the average temperature is formed — simplification 1 is made before the chain starts and carried through it. After the Boltzmann block comes the <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) — the pad signal with <i>T</i>(<i>t</i>, <i>x</i>, <i>y</i>) taken constant in space (simplification 3) and <i>T<sub>H</sub></i> = <i>T<sub>s</sub></i> at steady state (simplification 4) — sitting <strong>before the medium change</strong>. The <strong>medium change</strong> turns <i>T<sub>H</sub></i>(<i>t</i>) into <i>T</i><sub>air</sub>(<i>t</i>), and that signal has its own <strong>oscillator</strong> block <strong>after the medium change</strong>; the <strong>envelope signal converter (envelope operator)</strong> takes its envelope and puts out the exponential, drawn as the exponential signal block straight after it; the <strong>mixer</strong> multiplies that exponential by the attenuation α(<i>x</i>) — the Bode low-pass circle feeding in from below — giving <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i>, the same exponential shape, attenuated; and the <strong>steady-state filter</strong> keeps only <i>t</i> ≥ <i>t<sub>s</sub></i>, leaving the final block: <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>. This simplified version is the crux of this note: the whole process defined in its simplest, purest form.</p>
