@@ -446,6 +446,8 @@
                     <div class="symtxt">
                       <p><strong>Piecewise linear approximation.</strong> What it represents is a <strong>transform converter</strong> for attenuation. A <strong>transform converter</strong> is a block in a system diagram that takes a transform in one form and puts it out in another form: it changes the <em>form of the transform — the form of the response</em>, not the kind of signal — the underlying transform, what it does to the signal, stays exactly the same; only the form it is carried in changes. That is what separates it from a signal converter: a signal converter would change the kind of signal itself, while a transform converter changes only the form a response is expressed in. A transform converter has no letter notation — it is named for the conversion it performs. This converter works on the <strong>attenuation over distance</strong>: in goes the attenuation as it actually is in space — an <strong>exponential decay</strong>, the signal weakening smoothly and steadily with distance from the panel — and out comes the same attenuation converted into a <strong>piecewise linear approximation</strong>: straight-line pieces standing in for the smooth exponential. The attenuation itself is unchanged — the same weakening, at the same distances — only the form it is carried in changes. This symbol is <strong>not used in the Temperature block diagram</strong> — the attenuation there is carried as the exponential itself, in the exponential curve below the mixer — but it is kept here because it can be used later.</p>
                     </div>
+                  </div>
+                </div>
         <h3>Signals</h3>
         <p>A signal is a quantity that carries change through the system — what flows along the arrows between the operators. Each symbol shows the shape of that change.</p>
         <div class="symdefs">
@@ -486,8 +488,6 @@
                     <div class="symtxt">
                       <p><strong>Constant signal.</strong> What it represents is <strong>a signal that no longer changes</strong>: one value, held. It is the end of the chain — the temperature at position <i>x</i> after the transient has been filtered away, <i>T</i> constant at steady state — the state the whole system was travelling toward from the moment the difference operator measured the gap. Every earlier step exists to produce this: a settled temperature, at a place, that stays where it is until the setting changes again.</p>
                     </div>
-                  </div>
-                </div>
                   </div>
                 </div>
       </div>
