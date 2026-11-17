@@ -496,6 +496,25 @@
             <svg viewBox="0 0 72 72" role="img" aria-label="Exponential signal symbol: a circle with an exponential curve in it, starting low on the left, rising to the right and levelling off"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M11 53 C27 53 37 51 45 43 C52 36 56 27 58 21 L61 21" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
             <div class="symtxt">
               <p><strong>Exponential signal.</strong> What it represents is <strong>a signal that closes on its target at a rate proportional to the gap that remains</strong> — fast while the gap is big, slowing as the gap shrinks, levelling off as it arrives: the Newton settling of section 5, <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>)·<i>e</i><sup>−<i>kt</i></sup>. It is the simplified form of the oscillator signal — the oscillator's envelope and mean with the swing removed — and it is the form the envelope signal converter puts out. It appears twice in the chain: once as that converter's output, and once again after the mixer, because attenuation scales an exponential's size without changing its kind — the signal at position <i>x</i> is still this same exponential settling, only weaker. Whether it climbs or falls is set by the signal itself, by the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>: heating and cooling are the same exponential, closing the gap from opposite sides.</p>
+              <p><strong>The equivalent diagrams.</strong> This symbol can be drawn four ways — the curve climbing or falling, toward the right or toward the left — and all four are <strong>equivalent symbols</strong>: each one stands for the same exponential signal, the same closing-on-the-target at a rate proportional to the gap. When the direction is <strong>specifically known</strong>, the drawing that matches it can be used: heating, <i>T<sub>s</sub></i> &gt; <i>T<sub>o</sub></i>, climbs — drawn here up to the right, the form this note uses — and cooling, <i>T<sub>s</sub></i> &lt; <i>T<sub>o</sub></i>, falls. But when the direction is <strong>unknown</strong>, the four are <strong>interchangeable</strong>: any one of them can be drawn, and it still means the exponential — the direction is then carried by the signal itself, by the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>, not by which way the curve in the circle happens to lean.</p>
+              <div class="exp4" role="group" aria-label="The four equivalent diagrams of the exponential signal symbol: the curve drawn up to the right, down to the right, up to the left, and down to the left — four equivalent symbols for the same exponential signal">
+                <figure>
+                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn up to the right: the curve starts low on the left, rises to the right and levels off at the top"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 42 C20 42 28 40 34 33 C39 27 42 20 43 16 L46 16" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                  <figcaption>up to the right</figcaption>
+                </figure>
+                <figure>
+                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn down to the right: the curve starts high on the left, falls to the right and levels off at the bottom"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 14 C20 14 28 16 34 23 C39 29 42 36 43 40 L46 40" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                  <figcaption>down to the right</figcaption>
+                </figure>
+                <figure>
+                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn up to the left: the curve starts low on the right, rises to the left and levels off at the top"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M48 42 C36 42 28 40 22 33 C17 27 14 20 13 16 L10 16" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                  <figcaption>up to the left</figcaption>
+                </figure>
+                <figure>
+                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn down to the left: the curve starts high on the right, falls to the left and levels off at the bottom"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M48 14 C36 14 28 16 22 23 C17 29 14 36 13 40 L10 40" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                  <figcaption>down to the left</figcaption>
+                </figure>
+              </div>
             </div>
           </div>
           <div class="symrow">
