@@ -22,18 +22,11 @@
     var slider = document.getElementById('tempSlider');
     var setVal = document.getElementById('setVal');
     var Tset = parseFloat(slider.value);
-    var Tmean = Tset;          /* the exponential the oscillator chases — its middle value; reaches the target at steady state */
-    var Tact = Tset;           /* actual temperature — the oscillator signal = exponential + swing */
-    var WN_T = 0.52, ZE_T = 0.13; /* oscillator: swing period ≈ 12 s, envelope tau = 1/(ZE*WN) ≈ 15 s */
-    var WD_T = WN_T * Math.sqrt(1 - ZE_T * ZE_T); /* damped swing frequency */
-    var SWING_K = 0.5;         /* swing amplitude per degree of setpoint step */
-    var dev = 0, vdev = 0;     /* swing about the exponential, and its rate */
+    var Tmean = Tset;          /* air temperature — Newton's law of cooling: first order, one store, an exponential */
     var tNow = 0;              /* sim seconds */
-    var hist = [];             /* {t, T (actual/oscillator), Te (mean/exponential), Ts, e (envelope)} */
-    for (var i = 100; i >= 0; i--) hist.push({ t: -i * 0.5, T: Tact, Te: Tmean, Ts: Tset, e: 0 });
+    var hist = [];             /* {t, T (air temperature, the Newton exponential), Ts (setpoint)} */
+    for (var i = 100; i >= 0; i--) hist.push({ t: -i * 0.5, T: Tmean, Ts: Tset });
     tNow = 0;
-    /* the oscillator's own envelope: instantaneous amplitude of the swing about the exponential */
-    function envNow(){ var q = (vdev + ZE_T * WN_T * dev) / WD_T; return Math.sqrt(dev * dev + q * q); }
 
     var roTemp = document.getElementById('roTemp'),
         roState = document.getElementById('roState'),
@@ -45,9 +38,7 @@
         airBot = document.getElementById('airBot');
 
     slider.addEventListener('input', function(){
-      var nv = parseFloat(slider.value);
-      if (nv !== Tset){ vdev += SWING_K * (nv - Tset) * WD_T; } /* a step kicks off a swing sized to it */
-      Tset = nv;
+      Tset = parseFloat(slider.value);
       setVal.textContent = Tset.toFixed(1) + '°';
       drawDist();
     });
@@ -169,10 +160,9 @@
       return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     }
 
-    /* ---------- graph 1: transient, last 100 s — OSCILLATOR graph ----------
-       Actual temperature (oscillator signal): solid ORANGE.
-       The exponential it chases — the line it swings around, its middle value: dashed WHITE, behind.
-       Envelope: dashed ORANGE. Y axis auto-zooms + recentres as it settles,
+    /* ---------- graph 1: transient, last 100 s — Newton exponential ----------
+       Air temperature (Newton's law of cooling — first order, no ringing): solid ORANGE.
+       Setpoint T_s: dashed grey. Y axis auto-zooms + recentres on the curve,
        same behaviour as the Water Level live graph. */
     var gT = document.getElementById('gTransient');
     var yLoD = 19, yHiD = 31; /* displayed axis limits — eased toward the data */
@@ -183,16 +173,15 @@
       ctx.clearRect(0, 0, W, H);
       var padL = 40, padR = 8, padT = 16, padB = 24;
       var iw = W - padL - padR, ih = H - padT - padB;
-      /* auto-zoom / recentre: target axis brackets where the curves have
-         actually been over the last 20 s — the actual temperature and the mean
-         (Newton exponential) — with a little headroom. The setpoint and the
-         envelope edges do not stretch the axis (they may run off-frame), so
-         the view centres and zooms on the curve itself and rescales as it moves. */
+      /* auto-zoom / recentre: target axis brackets where the curve has
+         actually been over the last 20 s, with a little headroom. The setpoint
+         does not stretch the axis (it may run off-frame), so the view centres
+         and zooms on the curve itself and rescales as it moves. */
       var dMin = Infinity, dMax = -Infinity;
       hist.forEach(function(p){
         if (p.t < tNow - 20) return;
-        dMin = Math.min(dMin, p.T, p.Te);
-        dMax = Math.max(dMax, p.T, p.Te);
+        dMin = Math.min(dMin, p.T);
+        dMax = Math.max(dMax, p.T);
       });
       if (!isFinite(dMin)){ dMin = Tset - 1; dMax = Tset + 1; }
       var mid = (dMin + dMax) / 2, span = Math.min(34, Math.max(1.8, (dMax - dMin) * 1.3 + 0.5));
@@ -222,34 +211,18 @@
         ctx.textAlign = 'right'; ctx.fillText((tStep < 1 ? v.toFixed(1) : Math.round(v)) + '°', padL - 5, y + 4);
       }
       ctx.save(); ctx.beginPath(); ctx.rect(padL, padT, iw, ih); ctx.clip();
-      /* 1) the exponential the oscillator chases, white dashed, behind everything
-            (dark halo underneath so the white dashes read on a light panel) */
-      ctx.setLineDash([7, 5]); ctx.strokeStyle = ink; ctx.globalAlpha = 0.30; ctx.lineWidth = 3.1;
-      trace(function(p){ return p.Te; });
-      ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = 1; ctx.lineWidth = 1.7;
-      trace(function(p){ return p.Te; });
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-      /* 2) envelope — dashed orange: the oscillator signal's own envelope,
-            Te ± (amplitude of its swing), so the exponential it swings
-            around runs down the middle of the envelope */
-      var hasEnv = false; hist.forEach(function(p){ if (p.e > 0.03) hasEnv = true; });
-      if (hasEnv){
-        ctx.strokeStyle = heat; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2; ctx.globalAlpha = 0.65;
-        trace(function(p){ return p.Te + p.e; }); trace(function(p){ return p.Te - p.e; });
-        ctx.setLineDash([]); ctx.globalAlpha = 1;
-      }
-      /* 3) setpoint — centre line the envelope closes in on */
+      /* 1) setpoint — the target the exponential closes in on */
       ctx.strokeStyle = muted; ctx.setLineDash([4, 4]); ctx.lineWidth = 1; ctx.globalAlpha = 0.7;
       trace(function(p){ return p.Ts; });
       ctx.setLineDash([]); ctx.globalAlpha = 1;
-      /* 4) actual temperature — the oscillator signal, solid orange */
+      /* 2) air temperature — Newton's law of cooling, the exponential, solid orange */
       ctx.strokeStyle = heat; ctx.lineWidth = 2.2;
       trace(function(p){ return p.T; });
       var last = hist[hist.length - 1];
       if (last){ ctx.fillStyle = heat; ctx.beginPath(); ctx.arc(X(last.t), Y(last.T), 3.5, 0, 7); ctx.fill(); }
       ctx.restore();
       ctx.textAlign = 'left'; ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = heat;
-      ctx.fillText('T — actual (oscillator)', padL + 6, padT + 12);
+      ctx.fillText('T — Newton exponential', padL + 6, padT + 12);
       ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
       ctx.fillText('y: ' + yLo.toFixed(1) + '–' + yHi.toFixed(1) + '° · auto-zoom', padL + iw, padT + 12);
     }
@@ -342,25 +315,18 @@
       if (lastMs === null) lastMs = ms;
       var dt = Math.min(0.1, (ms - lastMs) / 1000); lastMs = ms;
       tNow += dt;
-      /* the exponential the oscillator chases — rises to the target, reaching it at steady state */
+      /* Newton's law of cooling, dT/dt = (T_s − T)/τ, stepped exactly — first order, so it can only close the gap, never overshoot */
       Tmean += (Tset - Tmean) * (1 - Math.exp(-dt / TAU));
-      /* actual — the oscillator signal: the exponential plus a damped swing about it, substepped */
-      var nSub = Math.max(1, Math.ceil(dt / 0.005)), hh = dt / nSub;
-      for (var si = 0; si < nSub; si++){
-        var acT = -WN_T * WN_T * dev - 2 * ZE_T * WN_T * vdev;
-        vdev += acT * hh; dev += vdev * hh;
-      }
-      Tact = Tmean + dev;
       acc += dt;
       if (acc >= 0.25){
         acc = 0;
-        hist.push({ t: tNow, T: Tact, Te: Tmean, Ts: Tset, e: envNow() });
+        hist.push({ t: tNow, T: Tmean, Ts: Tset });
         while (hist.length && hist[0].t < tNow - 100.5) hist.shift();
       }
-      /* readouts — Mean air temp reads the mean (exponential); state waits for the oscillator to settle too */
+      /* readouts */
       roTemp.textContent = Tmean.toFixed(1) + ' °C';
       var err = Math.abs(Tset - Tmean);
-      var steady = err < 0.05 && Math.abs(Tset - Tact) < 0.05 && envNow() < 0.1;
+      var steady = err < 0.05;
       roState.textContent = steady ? 'Steady state' : 'Transient';
       roState.className = 'v ' + (steady ? 'steady' : 'transient');
       var P = heaterPower();
@@ -395,23 +361,18 @@
     if(!slider) return;
     var setVal = document.getElementById('setValW');
     var Tset = parseFloat(slider.value);
-    var TaE = Tset, TwE = Tset;              /* the exponentials the oscillators chase — their middle values */
-    var Tair = Tset, Twat = Tset;            /* actual temperatures — exponential + damped swing */
-    var WN_A = 0.55, ZE_A = 0.12;            /* air: swing period ≈ 11 s, envelope tau ≈ 15 s */
-    var WN_W = 0.28, ZE_W = 0.15;            /* water: slower swing ≈ 22 s, envelope tau ≈ 24 s */
-    var WD_A = WN_A*Math.sqrt(1-ZE_A*ZE_A), WD_W = WN_W*Math.sqrt(1-ZE_W*ZE_W); /* damped swing frequencies */
-    var K_A = 0.5, K_W = 0.3;                /* swing amplitude per degree of setpoint step */
-    var dA = 0, vA = 0, dW = 0, vW = 0;      /* swings about the exponentials, and their rates */
+    /* two heat stores — air and water — like two capacitors in an RC ladder: second order, but
+       always overdamped (real time constants only), so each temperature is a sum of exponentials
+       and never overshoots. Air follows the pad; water follows the air, slowly. */
+    var Tair = Tset, Twat = Tset;
     var tNow = 0, hist = [];
-    /* each oscillator's own envelope: instantaneous amplitude of its swing about its exponential */
-    function envOf(d, v, ze, wn, wd){ var q = (v + ze * wn * d) / wd; return Math.sqrt(d * d + q * q); }
-    for (var i = 100; i >= 0; i--) hist.push({t:-i*0.5, Ta:Tair, Tw:Twat, TaE:TaE, TwE:TwE, Ts:Tset, eA:0, eW:0});
+    for (var i = 100; i >= 0; i--) hist.push({t:-i*0.5, Ta:Tair, Tw:Twat, Ts:Tset});
     var roAir=document.getElementById('roAirW'), roWat=document.getElementById('roWaterW'),
         roState=document.getElementById('roStateW'), roPow=document.getElementById('roPowerW'),
         rays=document.getElementById('raysW'), glowEl=document.getElementById('panelGlowW'),
         airTop=document.getElementById('airTopW'), watTop=document.getElementById('watTopW'),
         wline=document.getElementById('waterLineW');
-    slider.addEventListener('input', function(){ var nv=parseFloat(slider.value); if(nv!==Tset){ vA+=K_A*(nv-Tset)*WD_A; vW+=K_W*(nv-Tset)*WD_W; } Tset=nv; setVal.textContent=Tset.toFixed(1)+'°'; drawDistW(); });
+    slider.addEventListener('input', function(){ Tset=parseFloat(slider.value); setVal.textContent=Tset.toFixed(1)+'°'; drawDistW(); });
     function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
     function fit(cv){ var r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
       var w=Math.max(200,Math.round(r.width)), h=230;
@@ -425,15 +386,14 @@
       var blue='#3e7cb1';
       ctx.clearRect(0,0,W,H);
       var padL=40,padR=8,padT=16,padB=24, iw=W-padL-padR, ih=H-padT-padB;
-      /* auto-zoom / recentre: the target axis brackets where the curves have actually
-         been over the last 20 s — both curves and both exponentials — with a little
-         headroom. The setpoint and the envelope edges do not stretch the axis (they may
-         run off-frame), so the view centres and zooms on the curves themselves. */
+      /* auto-zoom / recentre: the target axis brackets where the two curves have actually
+         been over the last 20 s, with a little headroom. The setpoint does not stretch the
+         axis (it may run off-frame), so the view centres and zooms on the curves themselves. */
       var dMin=Infinity, dMax=-Infinity;
       hist.forEach(function(p){
         if(p.t<tNow-20) return;
-        dMin=Math.min(dMin,p.Ta,p.Tw,p.TaE,p.TwE);
-        dMax=Math.max(dMax,p.Ta,p.Tw,p.TaE,p.TwE);
+        dMin=Math.min(dMin,p.Ta,p.Tw);
+        dMax=Math.max(dMax,p.Ta,p.Tw);
       });
       if(!isFinite(dMin)){ dMin=Tset-1; dMax=Tset+1; }
       var mid=(dMin+dMax)/2, span=Math.min(34,Math.max(1.8,(dMax-dMin)*1.3+0.5));
@@ -457,28 +417,11 @@
       for(var v=Math.ceil(yLo/tStep)*tStep; v<=yHi+1e-9; v+=tStep){ var y=Y(v); ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+iw,y); ctx.stroke(); ctx.textAlign='right'; ctx.fillText((tStep<1?v.toFixed(1):Math.round(v))+'\u00b0', padL-5, y+4); }
       /* curves clipped to the plot area while the axis is still easing toward its target */
       ctx.save(); ctx.beginPath(); ctx.rect(padL,padT,iw,ih); ctx.clip();
-      /* 1) the exponentials the oscillators chase — white dashed, behind everything.
-            A thin dark halo is drawn under the white so the white dashes still read on a light panel. */
-      [function(p){return p.TaE;}, function(p){return p.TwE;}].forEach(function(get){
-        ctx.setLineDash([7,5]); ctx.strokeStyle=ink; ctx.globalAlpha=0.30; ctx.lineWidth=3.1; trace(get);
-        ctx.strokeStyle='#ffffff'; ctx.globalAlpha=1; ctx.lineWidth=1.7; trace(get);
-        ctx.setLineDash([]); ctx.globalAlpha=1;
-      });
-      /* 2) envelopes — dashed, same colour as their own curve: each oscillator signal's
-            own envelope, T_E \u00b1 (amplitude of its swing), so each white dashed exponential
-            it swings around runs down the middle of its envelope */
-      var hasEnv=false; hist.forEach(function(p){ if(p.eA>0.03||p.eW>0.03) hasEnv=true; });
-      if(hasEnv){
-        ctx.setLineDash([6,4]); ctx.lineWidth=1.2; ctx.globalAlpha=0.65;
-        ctx.strokeStyle=heat; trace(function(p){return p.TaE+p.eA;}); trace(function(p){return p.TaE-p.eA;});
-        ctx.strokeStyle=blue; trace(function(p){return p.TwE+p.eW;}); trace(function(p){return p.TwE-p.eW;});
-        ctx.setLineDash([]); ctx.globalAlpha=1;
-      }
-      /* 3) setpoint — the centre line the envelopes close in on */
+      /* 1) setpoint — the target both temperatures close in on */
       ctx.strokeStyle=muted; ctx.setLineDash([4,4]); ctx.lineWidth=1; ctx.globalAlpha=0.7;
       trace(function(p){return p.Ts;});
       ctx.setLineDash([]); ctx.globalAlpha=1;
-      /* 4) the actual oscillating temperatures — solid, orange for air, blue for water */
+      /* 2) the two temperatures — exponentials, solid, orange for air, blue for water */
       ctx.lineWidth=2.2; ctx.strokeStyle=heat; trace(function(p){return p.Ta;});
       ctx.strokeStyle=blue; trace(function(p){return p.Tw;});
       var last=hist[hist.length-1];
@@ -596,23 +539,15 @@
     function frame(ms){
       if(lastMs===null) lastMs=ms;
       var dt=Math.min(0.1,(ms-lastMs)/1000); lastMs=ms; tNow+=dt;
-      /* the exponentials the oscillators chase (the white dashed curves) — reach the target at steady state */
-      TaE += (Tset-TaE)*(1-Math.exp(-dt/TAU_AIR));
-      TwE += (TaE-TwE)*(1-Math.exp(-dt/TAU_W));
-      /* actual temperatures — each its exponential plus a damped swing about it, substepped */
-      var nSub=Math.max(1,Math.ceil(dt/0.005)), hh=dt/nSub;
-      for(var si=0; si<nSub; si++){
-        var acA=-WN_A*WN_A*dA-2*ZE_A*WN_A*vA; vA+=acA*hh; dA+=vA*hh;
-        var acW=-WN_W*WN_W*dW-2*ZE_W*WN_W*vW; vW+=acW*hh; dW+=vW*hh;
-      }
-      Tair=TaE+dA; Twat=TwE+dW;
-      var eAnow=envOf(dA,vA,ZE_A,WN_A,WD_A), eWnow=envOf(dW,vW,ZE_W,WN_W,WD_W);
+      /* Newton's law for each store: air closes on the pad, water closes on the air — first-order steps, no inertia, no ringing */
+      Tair += (Tset-Tair)*(1-Math.exp(-dt/TAU_AIR));
+      Twat += (Tair-Twat)*(1-Math.exp(-dt/TAU_W));
       acc+=dt;
-      if(acc>=0.25){ acc=0; hist.push({t:tNow,Ta:Tair,Tw:Twat,TaE:TaE,TwE:TwE,Ts:Tset,eA:eAnow,eW:eWnow}); while(hist.length&&hist[0].t<tNow-100.5) hist.shift(); }
+      if(acc>=0.25){ acc=0; hist.push({t:tNow,Ta:Tair,Tw:Twat,Ts:Tset}); while(hist.length&&hist[0].t<tNow-100.5) hist.shift(); }
       roAir.textContent=Tair.toFixed(1)+' °C'; roWat.textContent=Twat.toFixed(1)+' °C';
-      var steady=Math.abs(Tset-Twat)<0.05 && eWnow<0.1;
+      var steady=Math.abs(Tset-Twat)<0.05;
       roState.textContent=steady?'Steady state':'Transient'; roState.className='v '+(steady?'steady':'transient');
-      var err=Tset-TaE, P=err<=0?0:PMAX*Math.min(1,err/3);
+      var err=Tset-Tair, P=err<=0?0:PMAX*Math.min(1,err/3);
       roPow.textContent=P.toFixed(1)+' W';
       var frac=P/PMAX;
       glowEl.setAttribute('fill','rgb('+Math.round(87+140*frac)+','+Math.round(31+60*frac)+',20)');
@@ -633,204 +568,15 @@
 /* ===== original page script 3 ===== */
 (function(){
     "use strict";
-    /* ---------- live spring -> graph (Water Level tab, beside the oscillation graph) ---------- */
-    var mainSlider = document.getElementById('tempSliderW');
-    var springSlider = document.getElementById('tempSliderSpring');
-    var coil = document.getElementById('springCoil');
-    if (!mainSlider || !springSlider || !coil) return;
-    var setValEl = document.getElementById('springSetVal'),
-        tRead = document.getElementById('springTRead'),
-        tsRead = document.getElementById('springTsRead'),
-        targetLine = document.getElementById('springTargetLine'),
-        targetLabel = document.getElementById('springTargetLabel'),
-        massBar = document.getElementById('springMassBar'),
-        waterRect = document.getElementById('springWater'),
-        currentLabel = document.getElementById('springCurrentLabel'),
-        cv = document.getElementById('gSpring');
-
-    var WN = 1.8;        /* rad/s — swing period ≈ 3.5 s */
-    var ZETA = 0.14;     /* damping — envelope tau = 1/(ZETA*WN) ≈ 4 s */
-    var Ts = parseFloat(mainSlider.value);   /* target: T_s */
-    var T = Ts;                              /* current: T (starts settled) */
-    var V = 0;                               /* dT/dt */
-    var tNow = 0, hist = [];
-    for (var i = 180; i >= 0; i--) hist.push({ t: -i * 0.2, T: T, Ts: Ts });
-    var stepT = -100, stepAmp = 0;           /* last setpoint step, for the envelope */
-
-    function tempToY(v){ return 260 - (v - 20) / 30 * 210; }  /* matches the SVG axis: 50° -> 50, 20° -> 260 */
-
-    function setTarget(v, fromMain){
-      v = Math.round(v * 2) / 2;
-      if (v !== Ts){ stepAmp = T - v; stepT = tNow; }
-      Ts = v;
-      if (!fromMain) springSlider.value = v;
-      setValEl.textContent = v.toFixed(1) + '°';
-      tsRead.innerHTML = 'T<sub>s</sub> = ' + v.toFixed(1) + ' °C';
-    }
-    /* the tab's main slider drives the spring */
-    mainSlider.addEventListener('input', function(){ setTarget(parseFloat(mainSlider.value), false); });
-    /* the slider beside the animation drives both */
-    springSlider.addEventListener('input', function(){
-      var v = parseFloat(springSlider.value);
-      setTarget(v, true);
-      if (parseFloat(mainSlider.value) !== v){
-        mainSlider.value = v;
-        mainSlider.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    });
-    setTarget(Ts, false);
-
-    function coilPath(yBot){
-      var cx = 130, top = 42, half = 19, coils = 8;
-      var coilTop = top + 10, coilBot = yBot - 8;
-      var pts = [[cx, top], [cx, coilTop]];
-      var n = coils * 2;
-      for (var k = 1; k < n; k++){
-        pts.push([cx + (k % 2 ? half : -half), coilTop + (coilBot - coilTop) * k / n]);
-      }
-      pts.push([cx, coilBot], [cx, yBot]);
-      return 'M' + pts.map(function(p){ return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L');
-    }
-
-    function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-    function fit(){
-      var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-      var w = Math.max(220, Math.round(r.width)), h = 300;
-      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){ cv.width = w * dpr; cv.height = h * dpr; }
-      var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
-      return { ctx: c, w: w, h: h };
-    }
-
-    function drawGraph(){
-      var f = fit(), ctx = f.ctx, W = f.w, H = f.h;
-      var ink = cssVar('--ink'), muted = cssVar('--muted'), line = cssVar('--line'), heat = cssVar('--heat');
-      ctx.clearRect(0, 0, W, H);
-      var padL = 36, padR = 10, padT = 12, padB = 24, iw = W - padL - padR, ih = H - padT - padB;
-      var WIN = 36, yLo = 19, yHi = 51;
-      function X(t){ return padL + (t - (tNow - WIN)) / WIN * iw; }
-      function Y(v){ return padT + (yHi - v) / (yHi - yLo) * ih; }
-      ctx.font = '11px sans-serif'; ctx.lineWidth = 1;
-      /* grid */
-      ctx.strokeStyle = line; ctx.fillStyle = muted;
-      for (var s = 0; s <= WIN; s += 6){
-        var gx = padL + s / WIN * iw;
-        ctx.beginPath(); ctx.moveTo(gx, padT); ctx.lineTo(gx, padT + ih); ctx.stroke();
-        ctx.textAlign = 'center'; ctx.fillText(s === WIN ? 't' : 't−' + (WIN - s), gx, H - 8);
-      }
-      [20, 30, 40, 50].forEach(function(v){
-        var gy = Y(v);
-        ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + iw, gy); ctx.stroke();
-        ctx.textAlign = 'right'; ctx.fillText(v + '°', padL - 5, gy + 4);
-      });
-      /* envelope of the latest step: T_s ± A e^{-(t-stepT)/tau} */
-      if (stepAmp !== 0 && tNow - stepT < 30){
-        ctx.strokeStyle = heat; ctx.globalAlpha = 0.45; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2;
-        [1, -1].forEach(function(sg){
-          ctx.beginPath();
-          var started = false;
-          for (var t = Math.max(stepT, tNow - WIN); t <= tNow; t += 0.25){
-            var ev = Ts + sg * stepAmp * Math.exp(-ZETA * WN * (t - stepT));
-            var x = X(t), y = Y(ev);
-            started ? ctx.lineTo(x, y) : ctx.moveTo(x, y); started = true;
-          }
-          ctx.stroke();
-        });
-        ctx.setLineDash([]); ctx.globalAlpha = 1;
-      }
-      /* T_s target (dashed) — steps in the history included */
-      ctx.strokeStyle = muted; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.3; ctx.beginPath();
-      hist.forEach(function(p, ix){ var x = X(p.t), y = Y(p.Ts); ix ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-      ctx.stroke(); ctx.setLineDash([]);
-      /* T (solid) — drawn live from the spring */
-      ctx.strokeStyle = heat; ctx.lineWidth = 2.4; ctx.beginPath();
-      hist.forEach(function(p, ix){ var x = X(p.t), y = Y(p.T); ix ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-      ctx.stroke();
-      /* guide line + dot at the spring's current end */
-      var last = hist[hist.length - 1];
-      ctx.strokeStyle = ink; ctx.globalAlpha = 0.35; ctx.setLineDash([2, 3]);
-      ctx.beginPath(); ctx.moveTo(padL, Y(last.T)); ctx.lineTo(X(last.t), Y(last.T)); ctx.stroke();
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-      ctx.fillStyle = heat; ctx.beginPath(); ctx.arc(X(last.t), Y(last.T), 4, 0, 7); ctx.fill();
-      /* labels */
-      ctx.textAlign = 'left'; ctx.font = 'bold 11.5px sans-serif'; ctx.fillStyle = heat;
-      ctx.fillText('T', padL + 6, padT + 13);
-      ctx.fillStyle = muted; ctx.font = '11.5px sans-serif';
-      ctx.fillText('— live from the spring', padL + 20, padT + 13);
-      ctx.fillText('T_s — target', padL + 6, padT + 29);
-      /* phasor: rotating vector whose height is T - T_s */
-      var d = T - Ts, q = -V / WN;
-      var mag = Math.sqrt(d * d + q * q);
-      var cx = W - 46, cy = padT + 34, R = 28;
-      var sc = mag > 0.01 ? Math.min(R / mag, 2.2) : 2.2;
-      ctx.strokeStyle = line; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
-      ctx.strokeStyle = muted; ctx.setLineDash([2, 3]);
-      ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.stroke(); ctx.setLineDash([]);
-      if (mag > 0.05){
-        var px = cx + q * sc, py = cy - d * sc;
-        ctx.strokeStyle = ink; ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
-        ctx.strokeStyle = heat; ctx.setLineDash([2, 3]); ctx.lineWidth = 1.2;
-        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx + R + 6, py); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = heat; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 7); ctx.fill();
-      } else {
-        ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(cx, cy, 2.6, 0, 7); ctx.fill();
-      }
-      ctx.fillStyle = muted; ctx.font = '10.5px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('phasor', cx, cy + R + 13);
-      ctx.fillText('time →', padL + iw, H - 8);
-    }
-
-    var lastMs = null, acc = 0;
-    function frame(ms){
-      if (lastMs === null) lastMs = ms;
-      var dt = Math.min(0.05, (ms - lastMs) / 1000); lastMs = ms;
-      /* damped spring toward T_s — substepped for stability */
-      var steps = Math.max(1, Math.ceil(dt / 0.004)), h = dt / steps;
-      for (var k = 0; k < steps; k++){
-        var a = -WN * WN * (T - Ts) - 2 * ZETA * WN * V;
-        V += a * h; T += V * h; tNow += h;
-      }
-      acc += dt;
-      if (acc >= 0.05){
-        acc = 0;
-        hist.push({ t: tNow, T: T, Ts: Ts });
-        while (hist.length && hist[0].t < tNow - 37) hist.shift();
-      }
-      /* spring drawing */
-      var yT = tempToY(T), yTs = tempToY(Ts);
-      coil.setAttribute('d', coilPath(yT));
-      massBar.setAttribute('y', (yT - 5).toFixed(1));
-      waterRect.setAttribute('y', (yT + 5).toFixed(1));
-      waterRect.setAttribute('height', Math.max(0, 268 - (yT + 5)).toFixed(1));
-      currentLabel.setAttribute('y', (yT + 4).toFixed(1));
-      targetLine.setAttribute('y1', yTs.toFixed(1)); targetLine.setAttribute('y2', yTs.toFixed(1));
-      targetLabel.setAttribute('y', (yTs - 7).toFixed(1));
-      tRead.textContent = 'T = ' + T.toFixed(1) + ' °C';
-      drawGraph();
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  })();
-
-/* ===== original page script 4 ===== */
-(function(){
-    "use strict";
-    /* ---------- H2O partition: equilibrium graph + live partition spring (Water Level tab) ---------- */
+    /* ---------- H2O partition: equilibrium graph + live partition relaxation (Water Level tab) ---------- */
     var mainSlider = document.getElementById('tempSliderW');
     var ownSlider = document.getElementById('tempSliderH');
-    var coil = document.getElementById('springCoilH');
-    if (!mainSlider || !ownSlider || !coil) return;
+    var cv = document.getElementById('gPartitionH');
+    if (!mainSlider || !ownSlider || !cv) return;
     var setValEl = document.getElementById('hSetVal'),
         gasRead = document.getElementById('hGasRead'),
         liqRead = document.getElementById('hLiqRead'),
-        targetLine = document.getElementById('springTargetLineH'),
-        targetLabel = document.getElementById('springTargetLabelH'),
-        massBar = document.getElementById('springMassBarH'),
-        waterRect = document.getElementById('springWaterH'),
-        currentLabel = document.getElementById('springCurrentLabelH'),
-        cvEq = document.getElementById('gH2O'),
-        cv = document.getElementById('gSpringH');
+        cvEq = document.getElementById('gH2O');
 
     function gasEq(T){ return 2.0 * Math.exp(0.065 * (T - 25)); }  /* % of total H2O in the air at saturation */
     function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
@@ -892,13 +638,12 @@
       ctx.fillText('temperature →', padL + iw, H - 9);
     }
 
-    /* ----- live partition spring ----- */
-    var WN = 1.7, ZETA = 0.16;
-    var Geq = gasEq(Ts), G = Geq, V = 0;
+    /* ----- live partition: first-order relaxation toward the saturation split ----- */
+    var TAU_V = 5;   /* s — net evaporation/condensation ∝ (target − current): a store filling through a resistance, no inertia */
+    var Geq = gasEq(Ts), G = Geq;
     var tNow = 0, hist = [];
     for (var i = 180; i >= 0; i--) hist.push({ t: -i * 0.2, G: G, Geq: Geq });
 
-    function gasToY(g){ return 260 - Math.max(0, Math.min(12, g)) / 12 * 210; }
     function setTarget(v, fromMain){
       v = Math.round(v * 2) / 2;
       Ts = v; Geq = gasEq(v);
@@ -916,16 +661,6 @@
       }
     });
     setTarget(Ts, false);
-
-    function coilPath(yBot){
-      var cx = 130, top = 42, half = 19, coils = 8;
-      var coilTop = top + 10, coilBot = yBot - 8;
-      var pts = [[cx, top], [cx, coilTop]];
-      var n = coils * 2;
-      for (var k = 1; k < n; k++) pts.push([cx + (k % 2 ? half : -half), coilTop + (coilBot - coilTop) * k / n]);
-      pts.push([cx, coilBot], [cx, yBot]);
-      return 'M' + pts.map(function(p){ return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L');
-    }
 
     function drawGraph(){
       var f = fitC(cv, 300), ctx = f.ctx, W = f.w, H = f.h;
@@ -958,7 +693,7 @@
       ctx.strokeStyle = '#3e7cb1'; ctx.lineWidth = 2.4; ctx.beginPath();
       hist.forEach(function(p, ix){ var x = X(p.t), y = Y(100 - p.G); ix ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
       ctx.stroke();
-      /* H2O gas — drawn live from the spring */
+      /* H2O gas — drawn live from the relaxation */
       ctx.strokeStyle = heat; ctx.beginPath();
       hist.forEach(function(p, ix){ var x = X(p.t), y = Y(p.G); ix ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
       ctx.stroke();
@@ -968,7 +703,7 @@
       ctx.textAlign = 'left'; ctx.font = 'bold 11.5px sans-serif';
       ctx.fillStyle = '#3e7cb1'; ctx.fillText('H₂O liquid ' + (100 - G).toFixed(1) + '%', padL + 6, padT + 13);
       ctx.fillStyle = ink; ctx.fillText('H₂O total 100% — dashed', padL + 6, Y(100) - 7);
-      ctx.fillStyle = heat; ctx.fillText('H₂O gas ' + G.toFixed(1) + '% — live from the spring', padL + 6, padT + ih - 8);
+      ctx.fillStyle = heat; ctx.fillText('H₂O gas ' + G.toFixed(1) + '% — live, relaxing to its target', padL + 6, padT + ih - 8);
       ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
       ctx.fillText('time →', padL + iw, H - 8);
     }
@@ -979,27 +714,14 @@
       var dt = Math.min(0.05, (ms - lastMs) / 1000); lastMs = ms;
       eqTick += dt;
       if (eqTick > 0.5){ eqTick = 0; drawEq(); }
-      var steps = Math.max(1, Math.ceil(dt / 0.004)), h = dt / steps;
-      for (var k = 0; k < steps; k++){
-        var a = -WN * WN * (G - Geq) - 2 * ZETA * WN * V;
-        V += a * h; G += V * h; tNow += h;
-        if (G < 0.05){ G = 0.05; if (V < 0) V = 0; }
-        if (G > 13){ G = 13; if (V > 0) V = 0; }
-      }
+      /* d(gas)/dt = (target − gas)/τ — closes the gap exponentially, never overshoots */
+      G += (Geq - G) * (1 - Math.exp(-dt / TAU_V)); tNow += dt;
       acc += dt;
       if (acc >= 0.05){
         acc = 0;
         hist.push({ t: tNow, G: G, Geq: Geq });
         while (hist.length && hist[0].t < tNow - 37) hist.shift();
       }
-      var yG = gasToY(G), yGeq = gasToY(Geq);
-      coil.setAttribute('d', coilPath(yG));
-      massBar.setAttribute('y', (yG - 5).toFixed(1));
-      waterRect.setAttribute('y', (yG + 5).toFixed(1));
-      waterRect.setAttribute('height', Math.max(0, 268 - (yG + 5)).toFixed(1));
-      currentLabel.setAttribute('y', (yG + 4).toFixed(1));
-      targetLine.setAttribute('y1', yGeq.toFixed(1)); targetLine.setAttribute('y2', yGeq.toFixed(1));
-      targetLabel.setAttribute('y', (yGeq - 7).toFixed(1));
       gasRead.textContent = 'H₂O gas = ' + G.toFixed(1) + '%';
       liqRead.textContent = 'H₂O liquid = ' + (100 - G).toFixed(1) + '%';
       drawGraph();
@@ -1010,7 +732,7 @@
     window.addEventListener('resize', drawEq);
   })();
 
-/* ===== original page script 5 ===== */
+/* ===== original page script 4 ===== */
 (function(){
     "use strict";
     /* ---------- Note, Temperature tab: Boltzmann graphs ---------- */
@@ -1135,12 +857,12 @@
     drawBoltz();
   })();
 
-/* ===== original page script 6 ===== */
+/* ===== original page script 5 ===== */
 (function(){
     "use strict";
-    /* ---------- Note, Temperature tab: filter-distribution, oscillator, and interaction graphs ---------- */
+    /* ---------- Note, Temperature tab: filter-distribution, damping, and interaction graphs ---------- */
     var cF = document.getElementById('gFilterNote');
-    var cO = document.getElementById('gOscNote');
+    var cO = document.getElementById('gDampNote');
     var cI = document.getElementById('gInteractNote');
     if (!cF || !cO || !cI) return;
     function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
@@ -1182,50 +904,52 @@
       ctx.fillStyle = heat; ctx.fillText('exponential', padL + 6, padT + ih - 8);
     }
 
-    /* ----- what an oscillator is ----- */
-    function oscVal(t, amp){ return amp * Math.exp(-t / 3.2) * Math.cos(t * 2.4); }
-    function drawOsc(){
+    /* ----- step responses: first order (this system) vs the three second-order damping cases ----- */
+    function stepFirst(t, tau){ return 1 - Math.exp(-t / tau); }
+    function stepSecond(t, wn, z){
+      if (z < 1){ var wd = wn * Math.sqrt(1 - z * z); return 1 - Math.exp(-z * wn * t) * (Math.cos(wd * t) + z / Math.sqrt(1 - z * z) * Math.sin(wd * t)); }
+      if (z === 1) return 1 - Math.exp(-wn * t) * (1 + wn * t);
+      var r = Math.sqrt(z * z - 1), s1 = -wn * (z - r), s2 = -wn * (z + r);
+      return 1 + (s2 * Math.exp(s1 * t) - s1 * Math.exp(s2 * t)) / (s1 - s2);
+    }
+    function drawDamp(){
       var f = fitC(cO), ctx = f.ctx, W = f.w, H = f.h;
       var muted = cssVar('--muted'), line = cssVar('--line'), ink = cssVar('--ink'), heat = cssVar('--heat');
+      var blue = '#3e7cb1';
       ctx.clearRect(0, 0, W, H);
-      var padL = 36, padR = 14, padT = 16, padB = 30, iw = W - padL - padR, ih = H - padT - padB;
-      var tMax = 10, midY = padT + ih / 2, ampPx = ih * 0.42;
+      var padL = 40, padR = 14, padT = 14, padB = 30, iw = W - padL - padR, ih = H - padT - padB;
+      var tMax = 10, yMax = 1.6;
       function X(t){ return padL + t / tMax * iw; }
-      function Y(v){ return midY - v * ampPx; }
+      function Y(v){ return padT + (yMax - v) / yMax * ih; }
       ctx.font = '11px sans-serif'; ctx.lineWidth = 1; ctx.strokeStyle = line; ctx.fillStyle = muted;
-      for (var t = 0; t <= tMax; t += 2){ var x = X(t); ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ih); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillText(t === tMax ? 'time →' : String(t), x, H - 16); }
-      ctx.textAlign = 'center'; ctx.fillText('time', padL + iw / 2, H - 3);
+      for (var t = 0; t <= tMax; t += 2){ var x = X(t); ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ih); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillText(String(t), x, H - 16); }
+      [0, 0.5, 1, 1.5].forEach(function(v){ var y = Y(v); ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + iw, y); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(v.toFixed(1), padL - 5, y + 4); });
+      ctx.textAlign = 'center'; ctx.fillText('time after the step', padL + iw / 2, H - 3);
+      ctx.save(); ctx.translate(11, padT + ih / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('normalised response θ', 0, 0); ctx.restore();
       /* target */
-      ctx.strokeStyle = ink; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.moveTo(padL, midY); ctx.lineTo(padL + iw, midY); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText('target', padL + iw - 34, midY - 7);
-      /* envelope — dashed orange */
-      ctx.strokeStyle = heat; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.3; ctx.globalAlpha = 0.7;
-      [1, -1].forEach(function(sg){ ctx.beginPath(); for (var k = 0; k <= 80; k++){ var tt = tMax * k / 80, vv = sg * Math.exp(-tt / 3.2); k ? ctx.lineTo(X(tt), Y(vv)) : ctx.moveTo(X(tt), Y(vv)); } ctx.stroke(); });
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-      ctx.fillStyle = heat; ctx.fillText('envelope', padL + 6, padT + 12);
-      /* mean — the exponential simplification (white dashed with dark halo) */
-      ctx.setLineDash([7, 5]); ctx.strokeStyle = ink; ctx.globalAlpha = 0.3; ctx.lineWidth = 3;
-      ctx.beginPath(); for (var k2 = 0; k2 <= 80; k2++){ var t2 = tMax * k2 / 80, v2 = 1 - Math.exp(-t2 / 3.2); var yy = midY + ampPx * 0.9 - v2 * ampPx * 0.9; k2 ? ctx.lineTo(X(t2), yy) : ctx.moveTo(X(t2), yy); } ctx.stroke();
-      ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = 1; ctx.lineWidth = 1.6;
-      ctx.beginPath(); for (var k3 = 0; k3 <= 80; k3++){ var t3 = tMax * k3 / 80, v3 = 1 - Math.exp(-t3 / 3.2); var y3 = midY + ampPx * 0.9 - v3 * ampPx * 0.9; k3 ? ctx.lineTo(X(t3), y3) : ctx.moveTo(X(t3), y3); } ctx.stroke();
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-      /* oscillator — solid orange */
-      ctx.strokeStyle = heat; ctx.lineWidth = 2.4; ctx.beginPath();
-      for (var k4 = 0; k4 <= 160; k4++){ var t4 = tMax * k4 / 160; k4 ? ctx.lineTo(X(t4), Y(oscVal(t4, 1))) : ctx.moveTo(X(t4), Y(oscVal(t4, 1))); }
-      ctx.stroke();
-      ctx.fillStyle = heat; ctx.font = 'bold 11.5px sans-serif'; ctx.fillText('oscillator — swings around the target, settling', padL + 6, padT + ih - 6);
-      ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.fillText('mean (exponential simplification)', padL + iw - 168, midY + ampPx * 0.9 + 16);
+      ctx.strokeStyle = ink; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(padL, Y(1)); ctx.lineTo(padL + iw, Y(1)); ctx.stroke(); ctx.setLineDash([]);
+      function curve(fn, color, width, dash, alpha){
+        ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.globalAlpha = alpha || 1;
+        ctx.beginPath();
+        for (var k = 0; k <= 200; k++){ var tt = tMax * k / 200, y = Y(fn(tt)); k ? ctx.lineTo(X(tt), y) : ctx.moveTo(X(tt), y); }
+        ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      }
+      var wn = 1.5;
+      curve(function(t){ return stepSecond(t, wn, 0.2); }, muted, 1.4, [3, 3], 0.9);   /* underdamped — needs inertia */
+      curve(function(t){ return stepSecond(t, wn, 1); }, ink, 1.5, [7, 4], 0.8);        /* critically damped */
+      curve(function(t){ return stepSecond(t, wn, 2.5); }, blue, 2, [8, 4]);            /* overdamped — two stores, e.g. air + water */
+      curve(function(t){ return stepFirst(t, 1.6); }, heat, 2.8);                       /* first order — this system */
     }
 
-    /* ----- filter × oscillator -> temperature at a point ----- */
+    /* ----- filter × exponential -> temperature at a point ----- */
     function drawInteract(){
       var f = fitC(cI), ctx = f.ctx, W = f.w, H = f.h;
       var muted = cssVar('--muted'), line = cssVar('--line'), ink = cssVar('--ink'), heat = cssVar('--heat');
       var blue = '#3e7cb1';
       ctx.clearRect(0, 0, W, H);
       var gap = 26, pw = (W - 28 - gap * 2) / 3, padT = 30, ih = H - padT - 44;
-      var titles = ['Oscillator in — at the panel', 'Filter — distribution', 'New signal — T at a point'];
+      var titles = ['Exponential in — at the panel', 'Filter — distribution', 'New signal — T at a point'];
       function panel(i){ return 14 + i * (pw + gap); }
       for (var i = 0; i < 3; i++){
         var x0 = panel(i);
@@ -1241,13 +965,15 @@
           ctx.beginPath(); ctx.moveTo(ax + gap - 8, ay); ctx.lineTo(ax + gap - 15, ay - 4); ctx.lineTo(ax + gap - 15, ay + 4); ctx.closePath(); ctx.fillStyle = ink; ctx.fill();
         }
       }
-      /* panel 1: oscillator in time, full size */
+      function expIn(t){ return 1 - Math.exp(-t / 2.4); }
+      function tY(v){ return padT + 10 + (1 - v) * (ih - 20); }
+      /* panel 1: exponential in time, full size */
       (function(){
-        var x0 = panel(0), midY = padT + ih / 2, amp = ih * 0.38, tMax = 10;
+        var x0 = panel(0), tMax = 10;
         ctx.strokeStyle = muted; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x0 + 6, midY); ctx.lineTo(x0 + pw - 6, midY); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(x0 + 6, tY(1)); ctx.lineTo(x0 + pw - 6, tY(1)); ctx.stroke(); ctx.setLineDash([]);
         ctx.strokeStyle = heat; ctx.lineWidth = 2.2; ctx.beginPath();
-        for (var k = 0; k <= 120; k++){ var t = tMax * k / 120, x = x0 + 6 + (pw - 12) * k / 120, y = midY - oscVal(t, 1) * amp; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        for (var k = 0; k <= 120; k++){ var t = tMax * k / 120, x = x0 + 6 + (pw - 12) * k / 120, y = tY(expIn(t)); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
         ctx.stroke();
       })();
       /* panel 2: filter distribution, point marked at depth 0.62H */
@@ -1265,22 +991,20 @@
         ctx.fillStyle = blue; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'left';
         ctx.fillText('point · θ ≈ ' + thd.toFixed(2), X(zd) - 52, Y(thd) - 9);
       })();
-      /* panel 3: output — same oscillator, attenuated by theta at the point and delayed */
+      /* panel 3: output — the same exponential, scaled by theta at the point */
       (function(){
-        var x0 = panel(2), midY = padT + ih / 2, thd = thetaExp(0.62), amp = ih * 0.38 * thd, tMax = 10;
-        ctx.strokeStyle = muted; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x0 + 6, midY); ctx.lineTo(x0 + pw - 6, midY); ctx.stroke();
+        var x0 = panel(2), thd = thetaExp(0.62), tMax = 10;
         ctx.strokeStyle = heat; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55;
-        ctx.beginPath(); for (var k = 0; k <= 120; k++){ var t = tMax * k / 120, x = x0 + 6 + (pw - 12) * k / 120, y = midY - oscVal(t, 1) * (ih * 0.38); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+        ctx.beginPath(); for (var k = 0; k <= 120; k++){ var t = tMax * k / 120, x = x0 + 6 + (pw - 12) * k / 120, y = tY(expIn(t)); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
         ctx.setLineDash([]); ctx.globalAlpha = 1;
         ctx.strokeStyle = blue; ctx.lineWidth = 2.4; ctx.beginPath();
-        for (var k2 = 0; k2 <= 120; k2++){ var t2 = tMax * k2 / 120, x2 = x0 + 6 + (pw - 12) * k2 / 120, y2 = midY - oscVal(Math.max(0, t2 - 1.6), 1) * amp * (t2 < 1.6 ? 0.15 : 1); k2 ? ctx.lineTo(x2, y2) : ctx.moveTo(x2, y2); }
+        for (var k2 = 0; k2 <= 120; k2++){ var t2 = tMax * k2 / 120, x2 = x0 + 6 + (pw - 12) * k2 / 120, y2 = tY(thd * expIn(t2)); k2 ? ctx.lineTo(x2, y2) : ctx.moveTo(x2, y2); }
         ctx.stroke();
         ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('grey dashed = input, for comparison', x0 + pw / 2, padT + ih - 6);
+        ctx.fillText('dashed = input, for comparison', x0 + pw / 2, padT + ih - 6);
       })();
     }
-    function drawAll(){ drawFilter(); drawOsc(); drawInteract(); }
+    function drawAll(){ drawFilter(); drawDamp(); drawInteract(); }
     drawAll();
     window.addEventListener('resize', drawAll);
   })();

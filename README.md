@@ -2,7 +2,7 @@
 
 A heat study in a sealed terrarium: an air-only **Temperature** model, a
 three-medium **Water Level** model, and **Specifications** — with notes on
-particles, Boltzmann distributions, oscillators, and the filter model of
+particles, Boltzmann distributions, first-order (RC-like) heating, and the filter model of
 temperature distributions.
 
 Built with Vite + React.
