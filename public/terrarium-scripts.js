@@ -56,6 +56,102 @@
       return PMAX * Math.min(1, err / 3);
     }
 
+    /* ---------- particles in the top terrarium — the one particle animation ----------
+       Each particle is thermostatted on its own to the Maxwell–Boltzmann
+       distribution for the temperature at its own height: an Ornstein–Uhlenbeck
+       pull keeps re-drawing its velocity toward a Gaussian of width
+       sigma(local T). No velocity-swapping collisions, so energy can never
+       pool in a single fast particle while the rest go cold — every particle
+       keeps following its local distribution. The local temperature is a
+       field of depth layers, each relaxing toward the steady distribution
+       profile theta(z) for the current setpoint, top layers fast and deeper
+       layers slower: a setpoint rise re-excites the top first and the new
+       energy works its way down until the field settles back onto the
+       profile; a setpoint fall drains the energy out gradually, layer by
+       layer, and the particles slow down. A bounce off the heating panel
+       re-samples the particle's velocity from the panel-temperature
+       distribution, so particles near the panel keep getting heat. */
+    var pGroup = document.getElementById('topParticles');
+    var P_X0 = 68, P_Y0 = 44, P_W = 504, P_H = 272, P_X1 = P_X0 + P_W, P_Y1 = P_Y0 + P_H;
+    var P_PANEL_X0 = 190, P_PANEL_X1 = 450;
+    var P_N = 90, P_NB = 6;
+    var pReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function pGauss(){ var u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+    function sigmaForTemp(Tc){ return 30 + (Tc - 20) * 1.4; }
+    function thetaAtZ(zf, Ts){
+      var d = deltaOverH(Ts), eH = Math.exp(-1 / d);
+      return (Math.exp(-zf / d) - eH) / (1 - eH);
+    }
+    function layerTarget(i, Ts){
+      var zf = (i + 0.5) / P_NB;
+      return 20 + (Ts - 20) * (0.30 + 0.70 * thetaAtZ(zf, Ts));
+    }
+    var pLayers = [];
+    for (var li = 0; li < P_NB; li++) pLayers.push(layerTarget(li, Tset));
+    function localTempAt(y){
+      var pos = ((y - P_Y0) / P_H) * P_NB - 0.5;
+      if (pos <= 0) return pLayers[0];
+      if (pos >= P_NB - 1) return pLayers[P_NB - 1];
+      var i0 = Math.floor(pos), fr = pos - i0;
+      return pLayers[i0] * (1 - fr) + pLayers[i0 + 1] * fr;
+    }
+    var pParts = [], pCircles = [];
+    if (pGroup){
+      var SVGNS = 'http://www.w3.org/2000/svg';
+      for (var pi = 0; pi < P_N; pi++){
+        var px = P_X0 + 6 + Math.random() * (P_W - 12);
+        var py = P_Y0 + 6 + Math.random() * (P_H - 12);
+        var sg0 = sigmaForTemp(localTempAt(py));
+        pParts.push({ x: px, y: py, vx: pGauss() * sg0, vy: pGauss() * sg0 });
+        var cc = document.createElementNS(SVGNS, 'circle');
+        cc.setAttribute('r', '4'); cc.setAttribute('cx', px.toFixed(1)); cc.setAttribute('cy', py.toFixed(1));
+        pGroup.appendChild(cc); pCircles.push(cc);
+      }
+    }
+    function particleColor(sp, sgHot){
+      var t = Math.max(0, Math.min(1, sp / (sgHot * 2.4)));
+      if (t < 0.5) return 'rgb(' + Math.round(62 + (224 - 62) * t * 2) + ',' + Math.round(124 + (106 - 124) * t * 2) + ',' + Math.round(177 + (27 - 177) * t * 2) + ')';
+      return 'rgb(' + Math.round(224 + (194 - 224) * (t - 0.5) * 2) + ',' + Math.round(106 + (46 - 106) * (t - 0.5) * 2) + ',' + Math.round(27 + (16 - 27) * (t - 0.5) * 2) + ')';
+    }
+    function drawParticlesTop(){
+      var sgHot = sigmaForTemp(Tset);
+      for (var i = 0; i < pParts.length; i++){
+        var p = pParts[i];
+        pCircles[i].setAttribute('cx', p.x.toFixed(1));
+        pCircles[i].setAttribute('cy', p.y.toFixed(1));
+        pCircles[i].setAttribute('fill', particleColor(Math.sqrt(p.vx * p.vx + p.vy * p.vy), sgHot));
+      }
+    }
+    function stepParticles(dt){
+      for (var i = 0; i < P_NB; i++){
+        var tauL = 5 + (i / (P_NB - 1)) * 15;
+        pLayers[i] += (layerTarget(i, Tset) - pLayers[i]) * (1 - Math.exp(-dt / tauL));
+      }
+      var gamma = 1.4, decay = Math.exp(-gamma * dt);
+      var sgHot = sigmaForTemp(Tset);
+      for (var j = 0; j < pParts.length; j++){
+        var p = pParts[j];
+        var sg = sigmaForTemp(localTempAt(p.y));
+        var noise = sg * Math.sqrt(Math.max(0, 1 - decay * decay));
+        p.vx = p.vx * decay + pGauss() * noise;
+        p.vy = p.vy * decay + pGauss() * noise;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        if (p.x < P_X0 + 4){ p.x = P_X0 + 4; p.vx = Math.abs(p.vx); }
+        if (p.x > P_X1 - 4){ p.x = P_X1 - 4; p.vx = -Math.abs(p.vx); }
+        if (p.y > P_Y1 - 4){ p.y = P_Y1 - 4; p.vy = -Math.abs(p.vy); }
+        if (p.y < P_Y0 + 4){
+          p.y = P_Y0 + 4;
+          if (p.x >= P_PANEL_X0 && p.x <= P_PANEL_X1){
+            p.vx = pGauss() * sgHot;
+            p.vy = Math.abs(pGauss() * sgHot);
+          } else {
+            p.vy = Math.abs(p.vy);
+          }
+        }
+      }
+      drawParticlesTop();
+    }
+
     /* ---------- canvas helpers ---------- */
     function fitCanvas(cv){
       var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
@@ -85,16 +181,27 @@
       ctx.clearRect(0, 0, W, H);
       var padL = 40, padR = 8, padT = 16, padB = 24;
       var iw = W - padL - padR, ih = H - padT - padB;
-      /* auto-zoom / recentre: target axis brackets everything drawn — actual,
-         mean, setpoint and both envelopes — with a little headroom */
-      var dMin = Infinity, dMax = -Infinity;
+      /* auto-zoom / recentre: target axis brackets the recent stretch of
+         everything drawn — actual, mean, setpoint and both envelopes (centred
+         on the mean) — with a little headroom. Only the last 20 s sets the
+         target, so as the curves converge the axis follows them in instead of
+         staying stretched to extremes that scrolled by up to 100 s ago. */
+      var dMin = Infinity, dMax = -Infinity, cMin = Infinity, cMax = -Infinity;
       hist.forEach(function(p){
-        dMin = Math.min(dMin, p.T, p.Te, p.Ts - p.e, p.Ts);
-        dMax = Math.max(dMax, p.T, p.Te, p.Ts + p.e, p.Ts);
+        if (p.t < tNow - 20) return;
+        dMin = Math.min(dMin, p.T, p.Te, p.Te - p.e, p.Ts);
+        dMax = Math.max(dMax, p.T, p.Te, p.Te + p.e, p.Ts);
+        cMin = Math.min(cMin, p.T, p.Te, p.Ts);
+        cMax = Math.max(cMax, p.T, p.Te, p.Ts);
       });
-      if (!isFinite(dMin)){ dMin = Tset - 1; dMax = Tset + 1; }
+      if (!isFinite(dMin)){ dMin = Tset - 1; dMax = Tset + 1; cMin = dMin; cMax = dMax; }
       var mid = (dMin + dMax) / 2, span = Math.max(1.8, (dMax - dMin) * 1.3 + 0.5);
-      if (span > 34) span = 34;
+      if (span > 34){
+        span = 34;
+        /* keep the curves themselves in frame even if an envelope edge clips */
+        if (cMin < mid - span / 2) mid = cMin + span / 2;
+        if (cMax > mid + span / 2) mid = cMax - span / 2;
+      }
       yLoD += ((mid - span / 2) - yLoD) * 0.055;
       yHiD += ((mid + span / 2) - yHiD) * 0.055;
       if (yHiD - yLoD < 0.9){ var mm = (yLoD + yHiD) / 2; yLoD = mm - 0.45; yHiD = mm + 0.45; }
@@ -128,11 +235,13 @@
       ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = 1; ctx.lineWidth = 1.7;
       trace(function(p){ return p.Te; });
       ctx.setLineDash([]); ctx.globalAlpha = 1;
-      /* 2) envelope — dashed orange: T_s ± A e^(−t/τ) from the latest step */
+      /* 2) envelope — dashed orange: centred on the mean, Te ± A e^(−t/τ)
+            from the latest step, so the Newton exponential runs down the
+            middle of the envelope and the oscillator swings around it */
       var hasEnv = false; hist.forEach(function(p){ if (p.e > 0.03) hasEnv = true; });
       if (hasEnv){
         ctx.strokeStyle = heat; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2; ctx.globalAlpha = 0.65;
-        trace(function(p){ return p.Ts + p.e; }); trace(function(p){ return p.Ts - p.e; });
+        trace(function(p){ return p.Te + p.e; }); trace(function(p){ return p.Te - p.e; });
         ctx.setLineDash([]); ctx.globalAlpha = 1;
       }
       /* 3) setpoint — centre line the envelope closes in on */
@@ -274,10 +383,12 @@
       rays.setAttribute('transform', 'translate(0,' + (ph * 10).toFixed(1) + ')');
       airTop.setAttribute('stop-opacity', (0.12 + 0.5 * setFrac).toFixed(2));
       airBot.setAttribute('stop-opacity', (0.02 + 0.06 * setFrac).toFixed(2));
+      if (!pReduced) stepParticles(dt);
       drawTransient();
       requestAnimationFrame(frame);
     }
     drawDist();
+    drawParticlesTop();
     requestAnimationFrame(frame);
     window.addEventListener('resize', function(){ drawDist(); });
   })();
@@ -318,16 +429,27 @@
       var blue='#3e7cb1';
       ctx.clearRect(0,0,W,H);
       var padL=40,padR=8,padT=16,padB=24, iw=W-padL-padR, ih=H-padT-padB;
-      /* auto-zoom / recentre: the target axis brackets everything drawn — both curves,
-         both exponentials, both envelopes and the setpoint — with a little headroom */
-      var dMin=Infinity, dMax=-Infinity;
+      /* auto-zoom / recentre: the target axis brackets the recent stretch of everything
+         drawn — both curves, both exponentials, both envelopes (each centred on its own
+         exponential) and the setpoint — with a little headroom. Only the last 20 s sets
+         the target, so as the curves converge the axis follows them in instead of staying
+         stretched to extremes that scrolled by up to 100 s ago. */
+      var dMin=Infinity, dMax=-Infinity, cMin=Infinity, cMax=-Infinity;
       hist.forEach(function(p){
-        dMin=Math.min(dMin,p.Ta,p.Tw,p.TaE,p.TwE,p.Ts-p.eA,p.Ts-p.eW);
-        dMax=Math.max(dMax,p.Ta,p.Tw,p.TaE,p.TwE,p.Ts+p.eA,p.Ts+p.eW);
+        if(p.t<tNow-20) return;
+        dMin=Math.min(dMin,p.Ta,p.Tw,p.TaE,p.TwE,p.TaE-p.eA,p.TwE-p.eW,p.Ts);
+        dMax=Math.max(dMax,p.Ta,p.Tw,p.TaE,p.TwE,p.TaE+p.eA,p.TwE+p.eW,p.Ts);
+        cMin=Math.min(cMin,p.Ta,p.Tw,p.TaE,p.TwE,p.Ts);
+        cMax=Math.max(cMax,p.Ta,p.Tw,p.TaE,p.TwE,p.Ts);
       });
-      if(!isFinite(dMin)){ dMin=Tset-1; dMax=Tset+1; }
+      if(!isFinite(dMin)){ dMin=Tset-1; dMax=Tset+1; cMin=dMin; cMax=dMax; }
       var mid=(dMin+dMax)/2, span=Math.max(1.8,(dMax-dMin)*1.3+0.5);
-      if(span>34) span=34;
+      if(span>34){
+        span=34;
+        /* keep the curves themselves in frame even if an envelope edge clips */
+        if(cMin<mid-span/2) mid=cMin+span/2;
+        if(cMax>mid+span/2) mid=cMax-span/2;
+      }
       yLoD+=((mid-span/2)-yLoD)*0.055;
       yHiD+=((mid+span/2)-yHiD)*0.055;
       if(yHiD-yLoD<0.9){ var mm=(yLoD+yHiD)/2; yLoD=mm-0.45; yHiD=mm+0.45; }
@@ -355,12 +477,14 @@
         ctx.strokeStyle='#ffffff'; ctx.globalAlpha=1; ctx.lineWidth=1.7; trace(get);
         ctx.setLineDash([]); ctx.globalAlpha=1;
       });
-      /* 2) envelopes — dashed, same colour as their own curve: T_s \u00b1 A e^(\u2212t/\u03c4) from the latest step */
+      /* 2) envelopes — dashed, same colour as their own curve: centred on their own Newton
+            exponential, T_E \u00b1 A e^(\u2212t/\u03c4) from the latest step, so each white dashed
+            exponential runs down the middle of its envelope */
       var hasEnv=false; hist.forEach(function(p){ if(p.eA>0.03||p.eW>0.03) hasEnv=true; });
       if(hasEnv){
         ctx.setLineDash([6,4]); ctx.lineWidth=1.2; ctx.globalAlpha=0.65;
-        ctx.strokeStyle=heat; trace(function(p){return p.Ts+p.eA;}); trace(function(p){return p.Ts-p.eA;});
-        ctx.strokeStyle=blue; trace(function(p){return p.Ts+p.eW;}); trace(function(p){return p.Ts-p.eW;});
+        ctx.strokeStyle=heat; trace(function(p){return p.TaE+p.eA;}); trace(function(p){return p.TaE-p.eA;});
+        ctx.strokeStyle=blue; trace(function(p){return p.TwE+p.eW;}); trace(function(p){return p.TwE-p.eW;});
         ctx.setLineDash([]); ctx.globalAlpha=1;
       }
       /* 3) setpoint — the centre line the envelopes close in on */
@@ -900,12 +1024,11 @@
 /* ===== original page script 5 ===== */
 (function(){
     "use strict";
-    /* ---------- Note, Temperature tab: particle diagram + Boltzmann graphs ---------- */
+    /* ---------- Note, Temperature tab: Boltzmann graphs ---------- */
     var slider = document.getElementById('tempSlider');
-    var pCanvas = document.getElementById('particleCanvas');
     var sCanvas = document.getElementById('gBoltzSpeed');
     var eCanvas = document.getElementById('gBoltzEnergy');
-    if (!slider || !pCanvas || !sCanvas || !eCanvas) return;
+    if (!slider || !sCanvas || !eCanvas) return;
     var Tset = parseFloat(slider.value);
     var distTemps = [25, 30, 35, 40, 45, 50];
     var distColors = ['#3e7cb1', '#2e8b74', '#7fae2e', '#d9a404', '#e06a1b', '#c22e10'];
@@ -1018,91 +1141,9 @@
       });
     }
     function drawBoltz(){ drawSpeed(); drawEnergy(); markLegend(); }
-    /* ----- Particle diagram: air particles flying around an empty terrarium ----- */
-    var N = 110, parts = [];
-    function gauss(){ var u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-    function sigmaPx(Tc){
-      /* visual speed scale: exaggerated vs sqrt(T) so the slider change is plainly visible */
-      return 26 + (Tc - 20) * 1.15;
-    }
-    function seedParts(W, H, box){
-      parts = [];
-      for (var i = 0; i < N; i++){
-        var sg = sigmaPx(Tset);
-        parts.push({ x: box.x + Math.random() * box.w, y: box.y + Math.random() * box.h, vx: gauss() * sg, vy: gauss() * sg });
-      }
-    }
-    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var lastMs = null;
-    function drawParticles(ms){
-      var f = fitC(pCanvas, 280), ctx = f.ctx, W = f.w, H = f.h;
-      if (W < 220){ requestAnimationFrame(drawParticles); return; }
-      var muted = cssVar('--muted'), ink = cssVar('--ink'), glass = cssVar('--glass-edge'), heat = cssVar('--heat');
-      var box = { x: 46, y: 34, w: W - 118, h: H - 76 };
-      if (!parts.length) seedParts(W, H, box);
-      var dt = 0;
-      if (!reduced){
-        if (lastMs === null) lastMs = ms;
-        dt = Math.min(0.04, (ms - lastMs) / 1000); lastMs = ms;
-      }
-      /* thermostat: ease the swarm's RMS speed toward the slider temperature */
-      if (dt > 0){
-        var rms = 0; parts.forEach(function(p){ rms += p.vx * p.vx + p.vy * p.vy; });
-        rms = Math.sqrt(rms / N);
-        var target = sigmaPx(Tset) * Math.SQRT2;
-        var k = rms > 1 ? 1 + (target - rms) / rms * Math.min(1, dt * 2.5) : 1;
-        parts.forEach(function(p){
-          p.vx *= k; p.vy *= k;
-          p.x += p.vx * dt; p.y += p.vy * dt;
-          if (p.x < box.x + 3){ p.x = box.x + 3; p.vx = Math.abs(p.vx); }
-          if (p.x > box.x + box.w - 3){ p.x = box.x + box.w - 3; p.vx = -Math.abs(p.vx); }
-          if (p.y < box.y + 3){
-            p.y = box.y + 3; p.vy = Math.abs(p.vy);
-            /* bounce off the hot panel (top centre): leave faster than it arrived */
-            var pcx = box.x + box.w / 2;
-            if (Math.abs(p.x - pcx) < box.w * 0.26){ var boost = 1 + 0.25 * (Tset - 20) / 30 + Math.random() * 0.15; p.vx *= boost; p.vy *= boost; }
-          }
-          if (p.y > box.y + box.h - 3){ p.y = box.y + box.h - 3; p.vy = -Math.abs(p.vy); }
-        });
-        /* a few particle-particle collisions per frame: swap velocity components on close approach */
-        for (var c = 0; c < 14; c++){
-          var a = parts[(Math.random() * N) | 0], b = parts[(Math.random() * N) | 0];
-          if (a !== b && Math.abs(a.x - b.x) < 7 && Math.abs(a.y - b.y) < 7){ var tvx = a.vx, tvy = a.vy; a.vx = b.vx; a.vy = b.vy; b.vx = tvx; b.vy = tvy; }
-        }
-      }
-      ctx.clearRect(0, 0, W, H);
-      /* heating panel, top centre */
-      var pw = box.w * 0.52, px = box.x + (box.w - pw) / 2, glowF = (Tset - 20) / 30;
-      ctx.fillStyle = 'rgb(' + Math.round(87 + 140 * glowF) + ',' + Math.round(31 + 60 * glowF) + ',20)';
-      ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(px, box.y - 20, pw, 13, 3); else ctx.rect(px, box.y - 20, pw, 13); ctx.fill();
-      ctx.fillStyle = muted; ctx.font = '10.5px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('HEATING PANEL — TOP CENTRE', box.x + box.w / 2, box.y - 26);
-      /* tank */
-      ctx.strokeStyle = glass; ctx.lineWidth = 5; ctx.strokeRect(box.x, box.y, box.w, box.h);
-      /* depth markers */
-      ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
-      ctx.fillText('z = 0 (top)', box.x + box.w + 10, box.y + 4);
-      ctx.fillText('z = H/2', box.x + box.w + 10, box.y + box.h / 2 + 4);
-      ctx.fillText('z = H', box.x + box.w + 10, box.y + box.h + 4);
-      /* particles, coloured by speed */
-      var sg2 = sigmaPx(Tset);
-      parts.forEach(function(p){
-        var sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy) / (sg2 * 2.6);
-        sp = Math.max(0, Math.min(1, sp));
-        var col = sp < 0.5 ? 'rgb(' + Math.round(62 + (224 - 62) * sp * 2) + ',' + Math.round(124 + (106 - 124) * sp * 2) + ',' + Math.round(177 + (27 - 177) * sp * 2) + ')'
-                           : 'rgb(' + Math.round(224 + (194 - 224) * (sp - 0.5) * 2) + ',' + Math.round(106 + (46 - 106) * (sp - 0.5) * 2) + ',' + Math.round(27 + (16 - 27) * (sp - 0.5) * 2) + ')';
-        ctx.fillStyle = col;
-        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
-      });
-      ctx.fillStyle = muted; ctx.textAlign = 'center';
-      ctx.fillText('AIR ONLY — EMPTY · ' + Tset.toFixed(1) + ' °C setpoint', box.x + box.w / 2, box.y + box.h + 26);
-      void ink; void heat;
-      if (!reduced) requestAnimationFrame(drawParticles);
-    }
-    slider.addEventListener('input', function(){ Tset = parseFloat(slider.value); drawBoltz(); if (reduced) drawParticles(0); });
-    window.addEventListener('resize', function(){ drawBoltz(); if (reduced) drawParticles(0); });
+    slider.addEventListener('input', function(){ Tset = parseFloat(slider.value); drawBoltz(); });
+    window.addEventListener('resize', drawBoltz);
     drawBoltz();
-    requestAnimationFrame(drawParticles);
   })();
 
 /* ===== original page script 6 ===== */
@@ -1124,11 +1165,10 @@
     var D = 0.47; /* delta/H for the exponential shown */
     function thetaExp(zf){ var eH = Math.exp(-1 / D); return (Math.exp(-zf / D) - eH) / (1 - eH); }
 
-    /* ----- filter distribution again: simplest / linear / exponential ----- */
+    /* ----- filter distribution again: the exponential ----- */
     function drawFilter(){
       var f = fitC(cF), ctx = f.ctx, W = f.w, H = f.h;
       var muted = cssVar('--muted'), line = cssVar('--line'), ink = cssVar('--ink'), heat = cssVar('--heat');
-      var blue = '#3e7cb1', green = '#2e8b74';
       ctx.clearRect(0, 0, W, H);
       var padL = 44, padR = 14, padT = 14, padB = 30, iw = W - padL - padR, ih = H - padT - padB;
       function X(zf){ return padL + zf * iw; }
@@ -1144,19 +1184,13 @@
       });
       ctx.textAlign = 'center'; ctx.fillText('height down the tank', padL + iw / 2, H - 3);
       ctx.save(); ctx.translate(11, padT + ih / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('normalised temperature θ', 0, 0); ctx.restore();
-      /* simplest + linear filter: full heat to H/2, then straight line to 0 at H */
-      ctx.strokeStyle = blue; ctx.lineWidth = 2.4; ctx.beginPath();
-      ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(0.5), Y(1)); ctx.lineTo(X(1), Y(0)); ctx.stroke();
-      /* exponential — the accurate model */
+      /* exponential */
       ctx.strokeStyle = heat; ctx.lineWidth = 2.6; ctx.beginPath();
       for (var k = 0; k <= 60; k++){ var zf = k / 60; k ? ctx.lineTo(X(zf), Y(thetaExp(zf))) : ctx.moveTo(X(zf), Y(thetaExp(zf))); }
       ctx.stroke();
-      /* the exponential is the accurate model */
       /* labels */
       ctx.font = '11.5px sans-serif';
-      ctx.fillStyle = blue; ctx.fillText('simplest / linear filter — full heat to H/2, then straight down', padL + 6, padT + 14);
-      ctx.fillStyle = heat; ctx.fillText('exponential — more accurate', padL + 6, padT + ih - 8);
-      void green;
+      ctx.fillStyle = heat; ctx.fillText('exponential', padL + 6, padT + ih - 8);
     }
 
     /* ----- what an oscillator is ----- */
