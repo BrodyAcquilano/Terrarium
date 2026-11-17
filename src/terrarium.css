@@ -76,6 +76,8 @@ button, [role="button"], select, summary, input:not([type="checkbox"], [type="ra
       .letter .toc a:hover, .letter .toc a:focus-visible{ color:var(--heat); }
       .letter .f{ font-family: Georgia, "Times New Roman", serif; font-size:16.5px; }
       .letter .f i{ font-style:italic; }
+      .letter ol.simplist{ margin:6px 0 12px; padding-left:24px; }
+      .letter ol.simplist li{ font-size:15.5px; line-height:1.6; margin:6px 0; max-width:72ch; }
       .letter .fig{ border:1px solid var(--line); border-radius:8px; background:var(--panel2); padding:12px 14px 8px; margin:14px 0; }
       .letter .fig svg{ display:block; width:100%; height:auto; }
       .letter .fig canvas{ display:block; width:100%; height:240px; }

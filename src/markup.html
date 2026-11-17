@@ -1,6 +1,7 @@
 <main>
     <div class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-terrarium" aria-selected="true" aria-controls="view-terrarium">Temperature</button>
+      <button class="tab" role="tab" id="tab-symbols" aria-selected="false" aria-controls="view-symbols">Symbols</button>
       <button class="tab" role="tab" id="tab-water" aria-selected="false" aria-controls="view-water">Water Level</button>
       <button class="tab" role="tab" id="tab-specs" aria-selected="false" aria-controls="view-specs">Specifications</button>
     </div>
@@ -82,15 +83,6 @@
           <div class="legend" id="distLegend"></div>
         </div>
       </div>
-      <div class="graphs" style="margin-top:14px">
-        <div class="gcard" style="grid-column:1 / -1">
-          <h3>The Filter Model of Temperature Distributions</h3>
-          <p class="sub">The filter model graph: the same θ curves, redrawn with height along the bottom on a plain linear scale — 0, H/2 and H evenly spaced, so H/2 sits at the halfway mark again instead of down at θ ≈ 0.29 — and normalised temperature θ moved to the right-hand axis, squished onto a log scale. The left-hand axis is the same θ on a plain linear scale, so the squishing on the right is visible against it. The curves are redrawn stretched to match that squishing: a pure exponential decay straightens into <strong>one straight line</strong> — no flat section, no corner. The flat-then-down Bode overlay that used to be drawn over these curves is <strong>not drawn any more</strong>: it does not belong on the spatial distribution (section 9 of the note says why). The lighter dashed lines are the chosen anchor point — H/2 along the bottom, and θ at H/2 on the right, averaged over all the curves (≈ 0.29) — and the dot on each curve is where that curve crosses H/2. Same colours as the graph above; the current setpoint is bold.</p>
-          <canvas id="gLogDist" width="960" height="230" aria-label="The filter model of temperature distributions: graph of the normalised temperature distribution with height along the bottom on a linear scale, normalised temperature on a log-squished axis on the right and a linear theta axis on the left; on the log scale each exponential curve straightens into one straight line, with no flat section and no corner, and no Bode overlay drawn over the curves"></canvas>
-          <div class="legend"><span><i class="sw" style="background:#3e7cb1"></i>25 °C</span><span><i class="sw" style="background:#2e8b74"></i>30 °C</span><span><i class="sw" style="background:#7fae2e"></i>35 °C</span><span><i class="sw" style="background:#d9a404"></i>40 °C</span><span><i class="sw" style="background:#e06a1b"></i>45 °C</span><span><i class="sw" style="background:#c22e10"></i>50 °C</span></div>
-        </div>
-      </div>
-
       <h2 class="sec">Equations</h2>
       <div class="eqs">
         <h3>General</h3>
@@ -125,12 +117,22 @@
             <li><a href="#note-position">Adding position — the distribution down the height</a></li>
             <li><a href="#note-3d">The real geometry in 3D — for later</a></li>
             <li><a href="#note-filter">The filter model of temperature distributions</a></li>
-            <li><a href="#note-vocabulary">Towards system models — signals, filters, and the vocabulary</a> — word and graph diagrams, then the shorthand block symbols</li>
-            <li><a href="#note-system">System diagram — temperature over time at position x</a> — shorthand: complex and simplified diagrams</li>
+            <li><a href="#note-vocabulary">Towards system models — signals, filters, and the vocabulary</a></li>
+            <li><a href="#note-system">System diagram — temperature over time at position x</a> — shorthand: the system diagram (symbols defined on the Symbols tab)</li>
           </ol>
         </div>
         <p>This is the simplest terrarium model. A heating panel on top, and one variable: temperature. The terrarium is empty and sealed, with just air inside — and the job is to model how the heat distributes through that air.</p>
-        <p><strong>The simplifications, in order, before we begin.</strong> This model rests on nine simplifications, listed here in the order the shorthand block diagram in section 11 uses them — and each one is mentioned again where it happens in the note below. <strong>1</strong> — a set of particles becomes a Boltzmann distribution (made before the diagram even starts, and carried through the whole chain). <strong>2</strong> — that distribution becomes a single average temperature, by the integral average. <strong>3</strong> — the pad temperature is taken as constant in space: <i>T</i>(<i>t</i>, <i>x</i>, <i>y</i>) becomes <i>T<sub>H</sub></i>(<i>t</i>), the position parameters <i>x</i> and <i>y</i> removed, because the pad is assumed the same temperature everywhere. <strong>4</strong> — the pad temperature is set equal to the slider setting at steady state: <i>T<sub>H</sub></i> = <i>T<sub>s</sub></i>. <strong>5</strong> — the oscillator signal is converted to an exponential: the envelope signal converter — the envelope operator — keeps the envelope and drops the swing. <strong>6</strong> — the heat is assumed to go straight down, and the whole terrarium is taken to be heated this way: changes in the other two directions are ignored, so the temperature varies only with depth down the tank. <strong>7</strong> — space is brought back in a simplified form only: attenuation α(<i>x</i>), instead of the full spatial field that simplification 3 removed. <strong>8</strong> — the Bode plot: the filter is also drawn in Bode form — flat, then falling in a straight line — but that shape belongs to the <strong>frequency response</strong> (how much of an oscillation gets through, against frequency, at a fixed depth), not to the spatial curve: in space the attenuation stays the exponential, one straight line on the log-θ graph, with no flat section and no corner. <strong>9</strong> — the transient is ignored and only the steady state is kept (the steady-state filter), but only when that is applicable — when a variable, here temperature, is held constant long enough, <i>t</i> ≥ <i>t<sub>s</sub></i>.</p>
+        <p><strong>The simplifications, in order, before we begin.</strong> This model rests on eight simplifications, listed here in the order the shorthand block diagram in section 11 uses them — and each one is mentioned again where it happens in the note below.</p>
+        <ol class="simplist">
+          <li>A set of particles becomes a <strong>Boltzmann distribution</strong> (made before the diagram even starts, and carried through the whole chain).</li>
+          <li>That distribution becomes a <strong>single average temperature</strong>, by the integral average.</li>
+          <li>The pad temperature is taken as <strong>constant in space</strong>: <i>T</i>(<i>t</i>, <i>x</i>, <i>y</i>) becomes <i>T<sub>H</sub></i>(<i>t</i>), the position parameters <i>x</i> and <i>y</i> removed, because the pad is assumed the same temperature everywhere.</li>
+          <li>The pad temperature is set <strong>equal to the slider setting</strong> at steady state: <i>T<sub>H</sub></i> = <i>T<sub>s</sub></i>.</li>
+          <li>The <strong>oscillator signal is converted to an exponential</strong>: the envelope signal converter — the envelope operator — keeps the envelope and drops the swing.</li>
+          <li>The heat is assumed to go <strong>straight down</strong>, and the whole terrarium is taken to be heated this way: changes in the other two directions are ignored, so the temperature varies only with depth down the tank.</li>
+          <li>Space is brought back in a <strong>simplified form only</strong>: attenuation α(<i>x</i>), instead of the full spatial field that simplification 3 removed.</li>
+          <li>The transient is ignored and <strong>only the steady state is kept</strong> (the steady-state filter), but only when that is applicable — when a variable, here temperature, is held constant long enough, <i>t</i> ≥ <i>t<sub>s</sub></i>.</li>
+        </ol>
 
         <h3 id="note-pad">1. How the heating pad works</h3>
         <p>The pad converts electrical energy into heat: current pushed through a resistive element (Joule heating) warms the panel, and the thermostat holds its surface at the setpoint temperature, <i>T</i><sub>heating pad</sub> — the temperature you set with the slider, also written <i>T<sub>s</sub></i> in the simple solution. We assume the heat is spread <strong>uniformly</strong> over the panel surface, and from that surface it radiates and conducts downward into the air. For now we follow the heat in <strong>one direction only</strong> — straight down. The pad is inset from the edges of the terrarium, so a full picture would need heating in three dimensions; that is left for later (section 8).</p>
@@ -203,37 +205,29 @@
         <h3 id="note-position">7. Adding position — the distribution down the height</h3>
         <p>To get the distribution along the height — the second graph above — we add a second variable besides the temperature difference: <strong>position <i>z</i></strong>, measured down from the panel. The temperature is now <i>T</i>(<i>z</i>, <i>t</i>), not one number, and its steady shape is the normalised profile θ(<i>z</i>) in the equations above.</p>
         <div class="simp">
-          <p class="tag">Simplification 9 — Steady-state filter: transient → steady state only</p>
-          <p>We can ignore the transient and look at the steady state only — <strong>but only when it is applicable</strong>: only when a variable is held constant long enough for the transient to die away, <i>t</i> ≥ <i>t<sub>s</sub></i>, where <i>t<sub>s</sub></i> is the time it takes to reach steady state. Here that variable is temperature, held at the setpoint by the thermostat. Move the slider and the transient is real again until it settles. In the shorthand notation of sections 10–11 this step appears as its own block: the <strong>steady-state filter</strong>.</p>
+          <p class="tag">Simplification 8 — Steady-state filter: transient → steady state only</p>
+          <p>We can ignore the transient and look at the steady state only — <strong>but only when it is applicable</strong>: only when a variable is held constant long enough for the transient to die away, <i>t</i> ≥ <i>t<sub>s</sub></i>, where <i>t<sub>s</sub></i> is the time it takes to reach steady state. Here that variable is temperature, held at the setpoint by the thermostat. Move the slider and the transient is real again until it settles. In the shorthand notation of section 11 this step appears as its own block: the <strong>steady-state filter</strong> — its symbol is defined on the Symbols tab.</p>
         </div>
 
         <h3 id="note-3d">8. The real geometry in 3D — for later</h3>
         <p>Everything above follows heat in one direction, straight down — that is simplification 6 again: the heat is assumed to go straight down, the whole terrarium is heated this way, and changes in the other two directions are ignored. The real pad is inset from the terrarium walls, so heat also spreads sideways, and a full picture needs the actual 3D geometry. That is its own step, for later — it does not change the one-direction story, it completes it.</p>
 
         <h3 id="note-filter">9. The filter model of temperature distributions</h3>
-        <p><strong>What a Bode plot is.</strong> A Bode plot is a way of drawing how a system responds to oscillations: how much of a signal gets through — its magnitude, in dB on the vertical axis — drawn against <strong>frequency</strong>, on a log scale, on the horizontal axis. It is the standard plot for filters. Its useful trick is the straight-line approximation — instead of drawing the smooth curve exactly, you approximate it as two straight lines: a horizontal line where the signal passes, then, at one corner point, a straight downward line where it is cut off and falls away. That corner is the <strong>cutoff point</strong>. Both halves of that definition matter for what follows: the flat-then-down shape, and the fact that the horizontal axis is <em>frequency</em>.</p>
-        <p><strong>Why the Bode lines do not belong on this graph.</strong> Start with the temperature distribution we already have — normalised temperature θ against height, from the panel at the top down to the bottom of the tank. That distribution decays exponentially with height. Redraw it with height along the bottom on a plain linear scale and θ on a log scale — the graph titled <em>The Filter Model of Temperature Distributions</em> above. On that graph the exponential does exactly one thing: it straightens into <strong>one straight line</strong>. There is no horizontal segment and no corner in it — the spatial attenuation α(<i>x</i>) is a single exponential, falling from the panel all the way down. So the flat-then-down Bode overlay that used to be drawn over these curves has been <strong>removed</strong>: it was dressing the spatial curve up as something it is not. Height is not frequency — this graph is a spatial profile, not a frequency response.</p>
-        <p><strong>The log scaling — why it is used, and what it does to the curve.</strong> On a linear scale the exponential distribution bunches up: most of the change happens near the top, the rest is squashed into the bottom, and H/2 does not sit at the halfway mark — it falls down near θ ≈ 0.29. The log scale is used because of one fact: <strong>the log of an exponential is a straight line</strong>. Put θ on a log scale and the exponential curve is stretched out and straightened — equal ratios take equal space instead of equal differences, so the bunched-up low end opens out, height reads evenly again on its linear scale, and H/2 sits back at its proper halfway place.</p>
-        <p><strong>Would log-scaling the horizontal axis fix the mismatch? No.</strong> It is natural to ask whether the Bode shape failed to match because the horizontal axis was not log-scaled — but a Bode plot's horizontal axis is log <strong>frequency</strong> and its vertical axis is magnitude in <strong>dB</strong>. Our mismatch is the <em>variable</em>, not just the scaling: the horizontal axis here is distance, not frequency. Log-scaling the depth would not straighten anything — the exponential is taken of the depth itself, not of the log of the depth, so against log depth the line would bend <em>more</em>, not less. No rescaling of a distance axis turns a spatial profile into a frequency response.</p>
-        <p><strong>Distance acts as a filter.</strong> Reading the distribution itself as a filter is still the filter model: <strong>distance acts as a filter for temperature</strong>. The temperature at the panel is the signal going in, at full strength. Travelling down through the air, it is progressively attenuated: near the top, close to the panel, most of it gets through; further down, less and less, and only the smoothed, weakened remainder reaches the bottom. But the attenuation is the smooth exponential itself — it starts falling at the panel and keeps falling, with <strong>no flat pass region and no cutoff point</strong> on the spatial curve.</p>
-        <p><strong>Is it backwards? — no; it was drawn on the wrong graph.</strong> The Bode version sat flat at full heat first and only started falling after a cutoff point, while the exponential falls steadily from the top — and no, the lines were not simply backwards, and log-scaling the horizontal axis would not have fixed them, for the reason just given. The flat-then-down shape is a real shape — it just belongs somewhere else: to the <strong>frequency response</strong>. Let the surface temperature oscillate at frequency ω. At any fixed depth, the swing's amplitude is attenuated by <i>e</i><sup>−<i>x</i>/δ</sup>, where the thermal skin depth δ = √(2α/ω) gets <em>smaller</em> as the oscillation gets faster — so slow oscillations pass down to that depth and fast ones die out before reaching it. Amplitude against frequency, at a fixed depth, really does run flat and then fall: that is a genuine low-pass Bode plot, and that is where the Bode Plot Converter of sections 10–11 applies. On the spatial graph, the exponential is the accurate version — and on the log-θ graph it is one straight line.</p>
-        <p>So the temperature distribution <em>is</em> the filter model: the distribution down the height of the tank, in <strong>one direction only — straight down</strong>, read as a signal passing through a filter whose strength runs out with distance. The smooth exponential curves are the actual response; on the log-θ graph above, each one is a single straight line.</p>
+        <p><strong>Distance acts as a filter.</strong> Reading the distribution itself as a filter is the filter model: <strong>distance acts as a filter for temperature</strong>. The temperature at the panel is the signal going in, at full strength. Travelling down through the air, it is progressively attenuated: near the top, close to the panel, most of it gets through; further down, less and less, and only the smoothed, weakened remainder reaches the bottom. The attenuation is the smooth exponential itself — it starts falling at the panel and keeps falling, steadily, all the way down.</p>
+        <p><strong>That attenuation is a transform.</strong> A <strong>transform</strong> is an operation that takes a signal, or a response, in one form and gives it in another form. The transform of this system is <strong>attenuation over distance</strong>: the signal that goes in at the panel comes out weaker with every step of distance through the air, reshaped by that travel. In the block diagrams of section 11 that transform is carried by the <strong>exponential attenuation curve, α(<i>x</i>)</strong>, sitting <strong>below the mixer</strong> and feeding up into it — because the transform is applied as a <strong>product</strong>: the main signal, <i>T</i><sub>air</sub>(<i>t</i>), is multiplied by α(<i>x</i>), which is why a transform here is also called a <strong>mixer</strong>.</p>
+        <p>So the temperature distribution <em>is</em> the filter model: the distribution down the height of the tank, in <strong>one direction only — straight down</strong>, read as a signal passing through a filter whose strength runs out with distance. The smooth exponential curves are the actual response.</p>
         <div class="fig">
-          <canvas id="gFilterNote" width="640" height="240" role="img" aria-label="Graph of the filter distribution again: normalised temperature against height down the tank, showing the simplest version — top half of the tank at full heat, then a linear filter falling from H/2 to the bottom — the linear steady-state version, and the more accurate exponential curve; no Bode overlay is drawn on this spatial graph"></canvas>
-          <p class="figcap">The filter distribution again, with its versions side by side. <strong>Simplest version:</strong> the top half of the tank sits at full heat (θ = 1) down to H/2, then a <strong>linear filter</strong> falls in a straight line from H/2 to the bottom. The <strong>exponential</strong> curve is the more accurate version of the same distribution — full at the panel, decaying smoothly all the way down. No Bode lines are drawn over it: the flat-then-down Bode shape belongs to the frequency response, not to distance, as the paragraphs above set out. If the temperature changes, the whole distribution travels through a <strong>transient in time</strong> before it settles onto the new curve. For a simple distribution we can simplify to the linear steady state — but for the simulator it is just as well to use the <strong>exponential model</strong>, to be more accurate.</p>
-        </div>
-        <div class="simp">
-          <p class="tag">Simplification 8 — The Bode plot</p>
-          <p>The Bode plot is itself a simplification — and it belongs to the <strong>frequency response</strong>, not to this spatial curve. In space, the filter of distance has an <strong>exponential</strong> response: one straight line on the log-θ graph, no flat section, no corner. The Bode form — flat, then falling in a straight line — is the simple symbolic form for how the filter treats oscillations of different frequencies at a fixed depth (the work of the Bode Plot Converter, a transform converter, in sections 10–11). It is not the shape of the temperature distribution, and it is no longer drawn over it.</p>
+          <canvas id="gFilterNote" width="640" height="240" role="img" aria-label="Graph of the filter distribution again: normalised temperature against height down the tank, showing the simplest version — top half of the tank at full heat, then a linear filter falling from H/2 to the bottom — and the more accurate exponential curve"></canvas>
+          <p class="figcap">The filter distribution again, with its versions side by side. <strong>Simplest version:</strong> the top half of the tank sits at full heat (θ = 1) down to H/2, then a <strong>linear filter</strong> falls in a straight line from H/2 to the bottom. The <strong>exponential</strong> curve is the more accurate version of the same distribution — full at the panel, decaying smoothly all the way down. If the temperature changes, the whole distribution travels through a <strong>transient in time</strong> before it settles onto the new curve. For a simple distribution we can simplify to the linear steady state — but for the simulator it is just as well to use the <strong>exponential model</strong>, to be more accurate.</p>
         </div>
 
         <h3 id="note-vocabulary">10. Towards system models — signals, filters, and the vocabulary</h3>
-        <p><strong>Why this matters.</strong> The point of modelling this one simple system carefully is that the goal is to make system models for other things later — ecological things included. On the heating-panel system we picked, we can now say we have the system modelled quite well using a low-pass filter: the panel puts a temperature signal in at the top, and distance down the tank attenuates it in exactly the way the filter model describes. That is an interesting parallel into electronics, and parallels like it are a real way in: the spring we used elsewhere is a mechanical model, a spring's charging and settling can also be compared to a capacitor charging in a circuit, and a filter here is the same shape of idea as a filter in electronics. The same ecological concept can often be reached through a mechanical parallel, an electrical parallel, or a thermodynamic one.</p>
+        <p><strong>Why this matters.</strong> The point of modelling this one simple system carefully is that the goal is to make system models for other things later — ecological things included. On the heating-panel system we picked, we can now say we have the system modelled quite well using a filter: the panel puts a temperature signal in at the top, and distance down the tank attenuates it in exactly the way the filter model describes. That is an interesting parallel into electronics, and parallels like it are a real way in: the spring we used elsewhere is a mechanical model, a spring's charging and settling can also be compared to a capacitor charging in a circuit, and a filter here is the same shape of idea as a filter in electronics. The same ecological concept can often be reached through a mechanical parallel, an electrical parallel, or a thermodynamic one.</p>
         <p><strong>But the classification is our own.</strong> We do not want to classify system diagrams for ecology only by borrowing the parallel — always calling things by their electronics or mechanics name. So we keep the parallel as a parallel, and give the thing in front of us its own name. This filter is not, for our purposes, an electronic low-pass filter: it is a filter made of air, distance and heat, so we call it a <strong>thermodynamic filter</strong>. And the spring is not, for our purposes, just a mechanical spring: what matters in the diagram is the kind of signal it produces — a swing around a target that settles — so we call it an <strong>oscillator</strong>.</p>
         <p>That gives us our first two classifications for system diagrams, and a first subclass. The definitions below are the vocabulary this note concludes with — the words we will use from here on.</p>
         <p><strong>Signal</strong> — a quantity that carries change through a system: it has a value that varies — with time, with position, or with both — and a system diagram is, in large part, a picture of what happens to its signals. The temperature at the panel, and the temperature at each height below it, is a signal. Signals are classified by the shape of that variation.</p>
-        <p><strong>Filter</strong> — a part of a system that a signal passes through and is changed by: part of the signal gets through, part is attenuated or held back, so the signal that comes out is a reshaped version of the signal that went in. A filter is classified by what it lets through and what it cuts off, and by where its cutoff point falls.</p>
-        <p><strong>Thermodynamic filter</strong> — our name, for system diagrams, for a filter whose filtering is done by a thermodynamic process rather than by an electronic component. This note's example is the first one: distance through air acting on temperature — attenuating steadily with distance below the panel, the spatial profile an exponential with no flat section and no corner (section 9). In electronics language its frequency response is modelled well as a low-pass filter; in our classification it is a thermodynamic filter.</p>
+        <p><strong>Filter</strong> — a part of a system that a signal passes through and is changed by: part of the signal gets through, part is attenuated or held back, so the signal that comes out is a reshaped version of the signal that went in. A filter is classified by what it lets through and what it cuts off.</p>
+        <p><strong>Thermodynamic filter</strong> — our name, for system diagrams, for a filter whose filtering is done by a thermodynamic process rather than by an electronic component. This note’s example is the first one: distance through air acting on temperature — attenuating steadily with distance below the panel, the spatial profile an exponential (section 9). In our classification it is a thermodynamic filter.</p>
         <p><strong>Oscillator</strong> — the first subclass of signal. An oscillator is a signal that swings around a target or equilibrium value — overshooting it, coming back, and, if it is damped, settling onto it in swings that get smaller. The spring model produces an oscillator: a mechanical spring is the parallel that got us there, and a capacitor charging and discharging is an electrical parallel for the same kind of settling behaviour, but the classification names the signal, not the parallel. Many of the signals we will deal with will be oscillators.</p>
         <div class="fig">
           <canvas id="gOscNote" width="640" height="240" role="img" aria-label="Graph of what an oscillator is: a signal in time swinging above and below its target value, each swing smaller, inside a dashed decaying envelope, settling onto the target; the dashed mean through it is the exponential simplification with the swing removed"></canvas>
@@ -248,307 +242,8 @@
         <p><strong>Envelope signal converter — also called the envelope operator</strong> — a type of <strong>signal converter</strong>: it takes a signal in one form and puts it out in a simpler form: it changes the <em>kind</em> of signal, not where the signal is going. What it represents is the step this note has been using all along: <strong>oscillator signal in, exponential signal out</strong>. The thing it acts on is the oscillator itself — a signal swinging around its mean inside a decaying envelope — and what it keeps is that envelope and mean, dropping the swing, so the rest of the diagram can work with the simple exponential the oscillator settles along. The conversion is something <em>we</em> do to the signal; it is not a process happening in the tank.</p>
         <p>That ordering matters, and the diagrams below are drawn in that order. In a block diagram we will know that the true signal is an oscillator, and that the shape drawn for it is not the true shape — the simplification process is exactly what turns the oscillator into the simple signal. So the chain is drawn honestly: the oscillator goes into the <strong>envelope signal converter (the envelope operator)</strong> first, the converter outputs the <strong>exponential signal</strong>, and <strong>distance — the thermodynamic filter, a transform / mixer (⊗) — acts on that simplified signal</strong>, not on the raw oscillator. What the filter outputs is the temperature over time at a position: <i>T</i>(<i>x</i>, <i>t</i>).</p>
         <p><strong>Transform — also called a mixer</strong> — an operation that takes a signal, or a response, in one form and gives it in another form. Calling it a <strong>mixer</strong> can be clearer: a mixer combines its inputs as a <strong>product</strong>. Filters can be classified as transforms — as mixers: a filter takes the signal that goes in and transforms / mixes it into the reshaped signal that comes out, so a filter is one kind of transform / mixer — the kind that does its transforming by passing part of the signal and attenuating the rest. In this case a transform is used for <strong>attenuation over distance</strong>: the signal that goes in at the panel comes out weaker with every step of distance through the air, reshaped by that travel — that weakening-over-distance is the transform this note works with.</p>
-        <p><strong>Transform converter</strong> — a block in a system diagram that takes a transform in one form and puts it out in another form: it changes the <em>form of the transform — the form of the response</em>, not the kind of signal. That is what separates it from the envelope signal converter (the envelope operator): an envelope signal converter changes the kind of signal (oscillator in, exponential signal out), while a transform converter changes the form a response is expressed in — the underlying transform, what it does to the signal, stays exactly the same; only the form it is carried in changes. A transform converter has no letter notation — it is named for the conversion it performs.</p>
-        <p><strong>Bode Plot Converter</strong> — a type of <strong>transform converter</strong>, and our first one — and the transform it converts is <strong>attenuation</strong>. It takes an <strong>exponential decay</strong> — the attenuation of the signal in space, the filter of distance in its normal, exponential form — and converts it into a <strong>linear piecewise approximation</strong> of that same attenuation: the exponential goes in, and its <strong>Bode response</strong> — the attenuation redrawn as straight-line pieces — comes out. The attenuation itself does not change; only the form it is expressed in changes, from the exponential decay to the piecewise linear Bode form — and that is what gives us a <strong>simple filter model</strong>. The flat-then-down Bode shape it produces legitimately belongs to the <strong>frequency response</strong>: the amplitude of an oscillation against its frequency, at a fixed depth — where the thermal skin depth δ = √(2α/ω) shrinks as the frequency rises, so slow oscillations pass and fast ones are attenuated. On the spatial distribution itself the exponential stays an exponential — one straight line on the log-θ graph — and the converter's Bode form is not drawn over it (section 9).</p>
-        <p><strong>Mixer (⊗) vs adder (⊕).</strong> These are two different operations on signals, and the diagrams keep them apart. A <strong>mixer</strong> combines its inputs as a <strong>product</strong> — one signal scales the other, as the attenuation α(<i>x</i>) scales the temperature signal at the mixer. An <strong>adder</strong> combines its inputs as a <strong>sum</strong> — the signals are added together into one, as where we add the transient state in with the output of the position distribution filter / transform / mixer, or where <i>T<sub>H</sub></i>(<i>x</i>) and <i>T<sub>H</sub></i>(<i>t</i>) add in the complex diagram in section 11. Product gets the mixer, ⊗; addition gets the adder, ⊕.</p>
-        <p><strong>The system diagram, first — in words, then in graphs.</strong> Before any shorthand, the system is drawn two normal ways. <strong>Version 1</strong> draws it as blocks with word labels; <strong>Version 2</strong> draws the same blocks with a small graph inside each one instead of the words. Both draw the same process, in the same order, as the shorthand chain in section 11: <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> and their difference, the Boltzmann average, the oscillator block for the pad signal <i>T<sub>H</sub></i>(<i>t</i>) before the medium change, the medium change, the oscillator block for <i>T</i><sub>air</sub>(<i>t</i>) after it, the envelope signal converter, the mixer with the attenuation α(<i>x</i>), the exponential signal after the mixer, the steady-state filter, and the constant signal at the end. The shorthand definitions follow the two versions: each of these blocks is simplified into one circle with a symbol inside it — that is how the block diagram is simplified from the graphs.</p>
-        <h3>Version 1 — word labels</h3>
-        <div class="fig">
-          <svg viewBox="0 0 1030 300" role="img" aria-label="Block diagram with word labels, drawing the same process as the shorthand chain in section 11, in ordinary labelled blocks: T o, the previous steady-state value, and T s, the slider setting, stacked on the left, feed a block labelled Difference, T s minus T o; then a block labelled Boltzmann Distribution — particles to the average; the signal on the next arrow is T H of t, the pad temperature taken constant in space, an oscillator; then a block labelled Medium Change — pad to air — and the signal on the next arrow is T air of t, an oscillator; then a block labelled Envelope Signal Converter — the envelope operator — putting out an exponential; then a block labelled Mixer, with a block below it labelled Attenuation alpha of x — exponential over distance — feeding up into it, alpha of x multiplying as a product; then a block labelled Exponential Signal — T air of t at position x; then a block labelled Steady-State Filter, keeping only t at or after t s; and finally a block labelled Constant Signal — T air at position x">
-            <defs>
-              <marker id="arrW" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
-            </defs>
-            <!-- stacked inputs -->
-            <g font-size="12" fill="var(--ink)" text-anchor="middle">
-              <rect x="4" y="64" width="58" height="30" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="33" y="84" font-weight="700">T<tspan baseline-shift="sub" font-size="9">o</tspan></text>
-              <rect x="4" y="120" width="58" height="30" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="33" y="140" font-weight="700">T<tspan baseline-shift="sub" font-size="9">s</tspan></text>
-            </g>
-            <g font-size="9.5" fill="var(--muted)">
-              <text x="4" y="54">previous steady state</text>
-              <text x="4" y="164">slider setting</text>
-            </g>
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <path d="M62 79 L76 79 L76 96" marker-end="url(#arrW)"/>
-              <path d="M62 135 L70 135 L70 120" marker-end="url(#arrW)"/>
-            </g>
-            <!-- signal labels above the arrows -->
-            <g font-size="10" fill="var(--muted)" text-anchor="middle">
-              <text x="184" y="56">ΔT</text>
-              <text x="290" y="56">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t) — oscillator</text>
-              <text x="396" y="56">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) — oscillator</text>
-              <text x="502" y="56">exponential</text>
-              <text x="714" y="56">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
-            </g>
-            <!-- blocks -->
-            <g font-size="10.5" fill="var(--ink)" text-anchor="middle">
-              <rect x="84" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="131" y="112" font-weight="700">DIFFERENCE</text>
-              <rect x="190" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="237" y="103" font-weight="700">BOLTZMANN</text>
-              <text x="237" y="118" font-weight="700">DISTRIBUTION</text>
-              <rect x="296" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="343" y="103" font-weight="700">MEDIUM</text>
-              <text x="343" y="118" font-weight="700">CHANGE</text>
-              <rect x="402" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="449" y="95" font-weight="700">ENVELOPE</text>
-              <text x="449" y="110" font-weight="700">SIGNAL</text>
-              <text x="449" y="125" font-weight="700">CONVERTER</text>
-              <rect x="508" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="555" y="112" font-weight="700">MIXER</text>
-              <rect x="614" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="661" y="103" font-weight="700">EXPONENTIAL</text>
-              <text x="661" y="118" font-weight="700">SIGNAL</text>
-              <rect x="720" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="767" y="103" font-weight="700">STEADY-STATE</text>
-              <text x="767" y="118" font-weight="700">FILTER</text>
-              <rect x="826" y="70" width="94" height="76" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="873" y="103" font-weight="700">CONSTANT</text>
-              <text x="873" y="118" font-weight="700">SIGNAL</text>
-            </g>
-            <!-- arrows between blocks -->
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <line x1="178" y1="108" x2="186" y2="108" marker-end="url(#arrW)"/>
-              <line x1="284" y1="108" x2="292" y2="108" marker-end="url(#arrW)"/>
-              <line x1="390" y1="108" x2="398" y2="108" marker-end="url(#arrW)"/>
-              <line x1="496" y1="108" x2="504" y2="108" marker-end="url(#arrW)"/>
-              <line x1="602" y1="108" x2="610" y2="108" marker-end="url(#arrW)"/>
-              <line x1="708" y1="108" x2="716" y2="108" marker-end="url(#arrW)"/>
-              <line x1="814" y1="108" x2="822" y2="108" marker-end="url(#arrW)"/>
-              <line x1="920" y1="108" x2="934" y2="108" marker-end="url(#arrW)"/>
-            </g>
-            <g font-size="11.5" fill="var(--ink)">
-              <text x="942" y="104" font-weight="700">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x</text>
-              <text x="942" y="120" font-size="10" fill="var(--muted)">constant</text>
-            </g>
-            <!-- detail labels below the blocks -->
-            <g font-size="10" fill="var(--muted)" text-anchor="middle">
-              <text x="131" y="164">T<tspan baseline-shift="sub" font-size="8">s</tspan> − T<tspan baseline-shift="sub" font-size="8">o</tspan></text>
-              <text x="237" y="164">particles → ⟨E⟩</text>
-              <text x="343" y="164">pad → air</text>
-              <text x="449" y="164">envelope operator</text>
-              <text x="555" y="164">× α(x) — product</text>
-              <text x="661" y="164">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
-              <text x="767" y="164">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan> only</text>
-              <text x="873" y="164">T<tspan baseline-shift="sub" font-size="8">air</tspan> at position x</text>
-            </g>
-            <!-- attenuation feed from below -->
-            <rect x="493" y="216" width="124" height="46" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-            <g font-size="10" fill="var(--ink)" text-anchor="middle">
-              <text x="555" y="235" font-weight="700">ATTENUATION α(x)</text>
-              <text x="555" y="250" fill="var(--muted)">exponential over distance</text>
-            </g>
-            <path d="M555 216 L555 180" stroke="var(--ink)" stroke-width="1.8" fill="none" marker-end="url(#arrW)"/>
-            <text x="565" y="200" font-size="10" fill="var(--muted)">α(x) feeds the mixer</text>
-          </svg>
-          <p class="figcap">Word labels — the system in ordinary labelled blocks, before any shorthand. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> stacked → <strong>difference</strong> (<i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>) → <strong>Boltzmann distribution</strong> (particles → the integral average ⟨<i>E</i>⟩) → <i>T<sub>H</sub></i>(<i>t</i>), the pad taken constant in space, an oscillator → <strong>medium change</strong> (pad → air) → <i>T</i><sub>air</sub>(<i>t</i>), an oscillator → <strong>envelope signal converter (envelope operator)</strong> → exponential → <strong>mixer</strong>, with the <strong>attenuation α(<i>x</i>)</strong> feeding in from below and multiplying — α(<i>x</i>) drawn as what it is in space, an exponential over distance → <strong>exponential signal</strong>, <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> → <strong>steady-state filter</strong> (only <i>t</i> ≥ <i>t<sub>s</sub></i>) → <strong>constant signal</strong>: <i>T</i><sub>air</sub> constant at position <i>x</i>. No Bode lines are drawn on this spatial chain — the Bode form belongs to the frequency response (section 9).</p>
-        </div>
-        <h3>Version 2 — graphs</h3>
-        <div class="fig">
-          <svg viewBox="0 0 1030 300" role="img" aria-label="The same block diagram with a small graph inside each block instead of the words: T o and T s stacked on the left feed a difference block holding two horizontal lines, one above the other, with the gap between them marked; then a Boltzmann block holding a distribution curve — a peak with a long tail — with a dashed line at the average; the signal on the next arrow is T H of t, an oscillator; then a medium change block holding a crosshatch; the signal on the next arrow is T air of t, an oscillator; then an envelope converter block holding a small oscillator going in and an exponential coming out; then a mixer block holding an exponential curve times a decaying attenuation curve, with the attenuation alpha of x drawn below as its own decaying exponential graph feeding up into the mixer; then an exponential signal block holding an exponential curve, T air of t at position x; then a steady-state filter block holding a decaying transient that flattens at t s; and finally a constant signal block holding one straight horizontal line, T air at position x">
-            <defs>
-              <marker id="arrG2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
-              <clipPath id="v2ClipMed"><rect x="302" y="76" width="82" height="64" rx="4"/></clipPath>
-            </defs>
-            <!-- stacked inputs -->
-            <g font-size="12" fill="var(--ink)" text-anchor="middle">
-              <rect x="4" y="64" width="58" height="30" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="33" y="84" font-weight="700">T<tspan baseline-shift="sub" font-size="9">o</tspan></text>
-              <rect x="4" y="120" width="58" height="30" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="33" y="140" font-weight="700">T<tspan baseline-shift="sub" font-size="9">s</tspan></text>
-            </g>
-            <g font-size="9.5" fill="var(--muted)">
-              <text x="4" y="54">previous steady state</text>
-              <text x="4" y="164">slider setting</text>
-            </g>
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <path d="M62 79 L76 79 L76 96" marker-end="url(#arrG2)"/>
-              <path d="M62 135 L70 135 L70 120" marker-end="url(#arrG2)"/>
-            </g>
-            <!-- signal labels above the arrows -->
-            <g font-size="10" fill="var(--muted)" text-anchor="middle">
-              <text x="184" y="56">ΔT</text>
-              <text x="290" y="56">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t) — oscillator</text>
-              <text x="396" y="56">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) — oscillator</text>
-              <text x="502" y="56">exponential</text>
-              <text x="714" y="56">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
-            </g>
-            <!-- block outlines -->
-            <g fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6">
-              <rect x="84" y="70" width="94" height="76" rx="6"/>
-              <rect x="190" y="70" width="94" height="76" rx="6"/>
-              <rect x="296" y="70" width="94" height="76" rx="6"/>
-              <rect x="402" y="70" width="94" height="76" rx="6"/>
-              <rect x="508" y="70" width="94" height="76" rx="6"/>
-              <rect x="614" y="70" width="94" height="76" rx="6"/>
-              <rect x="720" y="70" width="94" height="76" rx="6"/>
-              <rect x="826" y="70" width="94" height="76" rx="6"/>
-            </g>
-            <!-- 1 difference: two levels and the gap between them -->
-            <g stroke="var(--heat)" stroke-width="2.2">
-              <line x1="96" y1="90" x2="166" y2="90"/>
-              <line x1="96" y1="128" x2="166" y2="128"/>
-            </g>
-            <g stroke="var(--muted)" stroke-width="1.3">
-              <line x1="160" y1="90" x2="160" y2="128"/>
-              <line x1="154" y1="90" x2="166" y2="90"/>
-              <line x1="154" y1="128" x2="166" y2="128"/>
-            </g>
-            <!-- 2 Boltzmann: peak and tail, dashed average -->
-            <path d="M200 132 C208 132 212 92 218 90 C224 88 228 106 236 120 C244 130 254 134 272 134" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <line x1="230" y1="84" x2="230" y2="138" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
-            <!-- 3 medium change: crosshatch -->
-            <g clip-path="url(#v2ClipMed)" stroke="var(--ink)" stroke-width="1.6">
-              <line x1="298" y1="72" x2="366" y2="140"/><line x1="312" y1="66" x2="380" y2="134"/><line x1="326" y1="60" x2="394" y2="128"/>
-              <line x1="388" y1="72" x2="320" y2="140"/><line x1="394" y1="86" x2="326" y2="154"/><line x1="380" y1="62" x2="312" y2="130"/>
-            </g>
-            <!-- 4 envelope converter: oscillator in, exponential out -->
-            <path d="M412 108 C417 94 422 94 426 108 C430 122 435 122 439 108" fill="none" stroke="var(--heat)" stroke-width="1.8" opacity="0.6"/>
-            <line x1="443" y1="108" x2="451" y2="108" stroke="var(--ink)" stroke-width="1.5" marker-end="url(#arrG2)"/>
-            <path d="M456 130 C466 130 474 126 480 116 C484 108 486 102 488 98" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <!-- 5 mixer: exponential × attenuation -->
-            <path d="M516 128 C524 128 530 124 535 115 C538 109 540 104 541 101" fill="none" stroke="var(--heat)" stroke-width="2"/>
-            <text x="549" y="114" font-size="14" font-weight="700" fill="var(--ink)" text-anchor="middle">×</text>
-            <path d="M562 92 C570 95 578 103 584 114 C588 122 592 127 596 129" fill="none" stroke="var(--heat)" stroke-width="2"/>
-            <!-- 6 exponential signal at x -->
-            <path d="M626 132 C642 132 654 128 664 118 C672 110 678 100 680 94 L684 94" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <!-- 7 steady-state filter: transient flattening at t_s -->
-            <path d="M730 92 C740 96 744 120 752 124 C760 127 766 112 774 112 L806 112" fill="none" stroke="var(--heat)" stroke-width="2"/>
-            <line x1="774" y1="86" x2="774" y2="138" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="4 3"/>
-            <!-- 8 constant signal -->
-            <line x1="838" y1="108" x2="908" y2="108" stroke="var(--heat)" stroke-width="2.4"/>
-            <!-- arrows between blocks -->
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <line x1="178" y1="108" x2="186" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="284" y1="108" x2="292" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="390" y1="108" x2="398" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="496" y1="108" x2="504" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="602" y1="108" x2="610" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="708" y1="108" x2="716" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="814" y1="108" x2="822" y2="108" marker-end="url(#arrG2)"/>
-              <line x1="920" y1="108" x2="934" y2="108" marker-end="url(#arrG2)"/>
-            </g>
-            <g font-size="11.5" fill="var(--ink)">
-              <text x="942" y="104" font-weight="700">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x</text>
-              <text x="942" y="120" font-size="10" fill="var(--muted)">constant</text>
-            </g>
-            <!-- word labels below the blocks -->
-            <g font-size="10" fill="var(--muted)" text-anchor="middle">
-              <text x="131" y="164">difference</text>
-              <text x="237" y="164">Boltzmann</text>
-              <text x="343" y="164">medium change</text>
-              <text x="449" y="164">envelope converter</text>
-              <text x="555" y="164">mixer</text>
-              <text x="661" y="164">exponential at x</text>
-              <text x="767" y="164">steady-state filter</text>
-              <text x="873" y="164">constant</text>
-            </g>
-            <!-- attenuation feed from below: the exponential over distance -->
-            <rect x="493" y="216" width="124" height="46" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-            <path d="M503 226 C518 228 532 236 544 244 C554 250 562 253 607 254" fill="none" stroke="var(--heat)" stroke-width="2"/>
-            <path d="M555 216 L555 180" stroke="var(--ink)" stroke-width="1.8" fill="none" marker-end="url(#arrG2)"/>
-            <text x="565" y="200" font-size="10" fill="var(--muted)">α(x) feeds the mixer</text>
-            <text x="555" y="280" font-size="10" fill="var(--muted)" text-anchor="middle">attenuation α(x) — exponential over distance</text>
-          </svg>
-          <p class="figcap">Graphs in place of the words — the same diagram, the same flow. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> → the <strong>difference</strong>, drawn as the two levels and the gap between them → the <strong>Boltzmann distribution</strong>, peak and tail with the dashed average → <i>T<sub>H</sub></i>(<i>t</i>) at the pad, an oscillator → <strong>medium change</strong>, the crosshatch → <i>T</i><sub>air</sub>(<i>t</i>), an oscillator → the <strong>envelope signal converter (envelope operator)</strong>: the oscillator going in, the exponential coming out, the swing dropped → the <strong>mixer</strong>: the exponential multiplied by the attenuation, itself drawn below as what it is in space — a decaying exponential over distance → the <strong>exponential signal</strong> at position <i>x</i> → the <strong>steady-state filter</strong>: the transient flattening at <i>t<sub>s</sub></i> → the <strong>constant signal</strong>, one straight line: <i>T</i><sub>air</sub> constant at position <i>x</i>. The shorthand definitions below simplify each of these blocks into one circle.</p>
-        </div>
-        <p>For the simulator, the filter in this diagram is run as the <strong>exponential model</strong>, not the Bode simplification — same diagram, more accurate filter: the envelope signal converter's exponential is what the simulator uses all the way through.</p>
-        <p><strong>Shorthand block symbols — the notation.</strong> The definitions above name the parts; the shorthand notation <em>draws</em> them. Every block in the shorthand is a <strong>circle with a small graph or mark inside it</strong> that says what the block is or what kind of signal it carries, so the diagram can be read at a glance — the equations and the processes visible in the shapes themselves. The symbols are defined here, beside their definitions, before the diagram in section 11 uses them: each one is a block of the graph version above, simplified — its little graph shrunk into a circle — and that step, from the graphs to the circles, is the shorthand. Where an older name and a shorthand symbol cover the same thing, the shorthand name is the one used from here on.</p>
-        <div class="symdefs">
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Difference operator symbol: a circle with a minus sign in it"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><line x1="22" y1="36" x2="50" y2="36" stroke="var(--ink)" stroke-width="3"/></svg>
-            <div class="symtxt">
-              <p><strong>Difference operator.</strong> What it represents is a <strong>comparison between two steady values</strong>: the previous steady-state value, <i>T<sub>o</sub></i>, and the new slider setting, <i>T<sub>s</sub></i>. Their difference, <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>, is the gap the whole rest of the chain has to close — its size says how far the temperature has to travel, and its sign says which way: up if <i>T<sub>s</sub></i> &gt; <i>T<sub>o</sub></i>, down if <i>T<sub>s</sub></i> &lt; <i>T<sub>o</sub></i>. Nothing has heated or cooled yet at this step; the difference operator only measures the change that has been asked for.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Addition operator symbol: a circle with a plus sign in it, the adder"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g stroke="var(--ink)" stroke-width="3"><line x1="22" y1="36" x2="50" y2="36"/><line x1="36" y1="22" x2="36" y2="50"/></g></svg>
-            <div class="symtxt">
-              <p><strong>Addition operator — the adder, ⊕.</strong> What it represents is <strong>two signals combined into one by adding them</strong>: the pair of the difference operator, for the places where a signal is genuinely the sum of two parts. Its place in this note is the complex diagram in section 11, where <i>T<sub>H</sub></i>(<i>x</i>) — the position part of the pad signal, a constant — adds with <i>T<sub>H</sub></i>(<i>t</i>) — the time part, an oscillator. Because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the output of the adding is an oscillator that just becomes <i>T<sub>H</sub></i>(<i>t</i>) again: adding a constant to the oscillator does not change its kind. Adding is this operator; multiplying is the mixer, ⊗; subtracting is the difference operator.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Oscillator signal symbol: a circle with one cycle of a sine wave across its middle"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 36 C14 12 22 12 28 36 C34 60 42 60 48 36 C52 22 58 22 64 36" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
-            <div class="symtxt">
-              <p><strong>Oscillator signal.</strong> What it represents is a <strong>signal that swings around a target value and settles onto it</strong>: it overshoots, comes back, overshoots less, and the swings die away inside a decaying envelope until only the target remains. That is the true shape of the temperature signals in this note before they are simplified: <i>T<sub>H</sub></i>(<i>t</i>) at the pad is an oscillator signal, and after the medium change <i>T</i><sub>air</sub>(<i>t</i>) is another — the air swings around the pad temperature as it closes in on it. The smooth exponential is this signal with the swing removed (simplification 5), not the signal itself.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Boltzmann distribution symbol: a circle with a distribution curve in it — a peak with a long tail — and a dashed line at the average"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M12 52 C18 52 22 20 28 18 C34 16 38 32 44 42 C49 50 54 53 60 53" fill="none" stroke="var(--heat)" stroke-width="2.4"/><line x1="40" y1="16" x2="40" y2="56" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="4 3"/></svg>
-            <div class="symtxt">
-              <p><strong>Boltzmann distribution.</strong> What it represents is <strong>the spread of energies across all the particles of the air at one instant</strong> — few nearly still, most in the middle, a long tail of a few racing — and the temperature that spread amounts to. It stands for two steps: <strong>simplification 1</strong>, the whole set of particles and their bounces replaced by this one distribution, and <strong>simplification 2</strong>, that distribution collapsed by its integral average, ⟨<i>E</i>⟩ = ∫ <i>E</i> · <i>P</i>(<i>E</i>) d<i>E</i> = (3/2) <i>k<sub>B</sub> T</i>, into the single number <i>T</i>. It is the <strong>first simplification</strong>: made before the diagram even starts and carried through the whole chain — every temperature anywhere in the diagrams is already this average, not any one particle's motion.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Medium change symbol: a circle with a hash in it — three diagonal lines one way crossed by three diagonal lines the other way"><defs><clipPath id="symClipMed"><circle cx="36" cy="36" r="28"/></clipPath></defs><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g clip-path="url(#symClipMed)" stroke="var(--ink)" stroke-width="2"><line x1="10" y1="10" x2="62" y2="62"/><line x1="17" y1="4" x2="68" y2="55"/><line x1="4" y1="17" x2="55" y2="68"/><line x1="62" y1="10" x2="10" y2="62"/><line x1="57" y1="2" x2="2" y2="57"/><line x1="72" y1="13" x2="13" y2="72"/></g></svg>
-            <div class="symtxt">
-              <p><strong>Medium change.</strong> What it represents is <strong>the signal crossing from one medium into another</strong> — here, heat passing from the solid heating pad into the air — and coming out as the corresponding signal in the new medium: <i>T<sub>H</sub></i>(<i>t</i>) becomes <i>T</i><sub>air</sub>(<i>t</i>). The two sides are not the same substance and do not respond the same way: the pad is held at its temperature by the thermostat, while the air has to be brought there by contact. <strong>The medium-change math:</strong> the air chases the pad by Newton's law, d<i>T</i><sub>air</sub>/d<i>t</i> = <i>k</i>·(<i>T<sub>H</sub></i> − <i>T</i><sub>air</sub>), so <i>T</i><sub>air</sub>(<i>t</i>) = <i>T<sub>H</sub></i> − (<i>T<sub>H</sub></i> − <i>T<sub>o</sub></i>)·<i>e</i><sup>−<i>kt</i></sup> as its mean — an oscillator in the air, swinging around the pad temperature, with the coupling <i>k</i> set by the contact between pad and air. The kind of signal does not change across it: oscillator in, oscillator out — what changes is the medium carrying it, and with it the constants that govern it.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Envelope signal converter symbol — the envelope operator: a circle with a curved dashed diamond in it, each diagonal side an exponential curve like an envelope line, concave inwards toward the centre"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g fill="none" stroke="var(--heat)" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"><path d="M36 11 Q40 32 61 36"/><path d="M61 36 Q40 40 36 61"/><path d="M36 61 Q32 40 11 36"/><path d="M11 36 Q32 32 36 11"/></g></svg>
-            <div class="symtxt">
-              <p><strong>Envelope signal converter — the envelope operator.</strong> What it represents is <strong>the envelope of an oscillator signal being taken as the signal</strong>. An oscillator swings around its mean inside a decaying envelope; this converter — a type of <strong>signal converter</strong> — keeps that envelope and the mean it bounds, and drops the swing between them, so an <strong>exponential</strong> comes out where an oscillator went in. It changes the <em>kind</em> of signal, not its destination or its size: the exponential it produces settles to the same target, along the same mean, as the oscillator it replaces. This is <strong>simplification 5</strong> as a step in the diagram — a conversion we perform on the signal so the rest of the chain can work with the simple form, not a process happening in the tank.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Exponential signal symbol: a circle with an exponential curve in it, starting low on the left, rising to the right and levelling off"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M11 53 C27 53 37 51 45 43 C52 36 56 27 58 21 L61 21" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
-            <div class="symtxt">
-              <p><strong>Exponential signal.</strong> What it represents is <strong>a signal that closes on its target at a rate proportional to the gap that remains</strong> — fast while the gap is big, slowing as the gap shrinks, levelling off as it arrives: the Newton settling of section 5, <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>)·<i>e</i><sup>−<i>kt</i></sup>. It is the simplified form of the oscillator signal — the oscillator's envelope and mean with the swing removed — and it is the form the envelope signal converter puts out. It appears twice in the chain: once as that converter's output, and once again after the mixer, because attenuation scales an exponential's size without changing its kind — the signal at position <i>x</i> is still this same exponential settling, only weaker. Whether it climbs or falls is set by the signal itself, by the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>: heating and cooling are the same exponential, closing the gap from opposite sides.</p>
-              <p><strong>The equivalent diagrams.</strong> This symbol can be drawn four ways — the curve climbing or falling, toward the right or toward the left — and all four are <strong>equivalent symbols</strong>: each one stands for the same exponential signal, the same closing-on-the-target at a rate proportional to the gap. When the direction is <strong>specifically known</strong>, the drawing that matches it can be used: heating, <i>T<sub>s</sub></i> &gt; <i>T<sub>o</sub></i>, climbs — drawn here up to the right, the form this note uses — and cooling, <i>T<sub>s</sub></i> &lt; <i>T<sub>o</sub></i>, falls. But when the direction is <strong>unknown</strong>, the four are <strong>interchangeable</strong>: any one of them can be drawn, and it still means the exponential — the direction is then carried by the signal itself, by the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>, not by which way the curve in the circle happens to lean.</p>
-              <div class="exp4" role="group" aria-label="The four equivalent diagrams of the exponential signal symbol: the curve drawn up to the right, down to the right, up to the left, and down to the left — four equivalent symbols for the same exponential signal">
-                <figure>
-                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn up to the right: the curve starts low on the left, rises to the right and levels off at the top"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 42 C20 42 28 40 34 33 C39 27 42 20 43 16 L46 16" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
-                  <figcaption>up to the right</figcaption>
-                </figure>
-                <figure>
-                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn down to the right: the curve starts high on the left, falls to the right and levels off at the bottom"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 14 C20 14 28 16 34 23 C39 29 42 36 43 40 L46 40" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
-                  <figcaption>down to the right</figcaption>
-                </figure>
-                <figure>
-                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn up to the left: the curve starts low on the right, rises to the left and levels off at the top"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M48 42 C36 42 28 40 22 33 C17 27 14 20 13 16 L10 16" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
-                  <figcaption>up to the left</figcaption>
-                </figure>
-                <figure>
-                  <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn down to the left: the curve starts high on the right, falls to the left and levels off at the bottom"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M48 14 C36 14 28 16 22 23 C17 29 14 36 13 40 L10 40" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
-                  <figcaption>down to the left</figcaption>
-                </figure>
-              </div>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Mixer symbol: a circle with an X in it, the product sign"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g stroke="var(--ink)" stroke-width="2.6"><line x1="23" y1="23" x2="49" y2="49"/><line x1="49" y1="23" x2="23" y2="49"/></g></svg>
-            <div class="symtxt">
-              <p><strong>Mixer — ⊗.</strong> What it represents is <strong>one signal scaling another by multiplication</strong>: a transform carried out as a product. In this note the mixer is where the temperature signal meets space: the exponential <i>T</i><sub>air</sub>(<i>t</i>) runs through the attenuation and is multiplied by it — <i>T</i><sub>air</sub>(<i>t</i>) × α(<i>x</i>) = <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> — so what comes out is the same signal, reduced by exactly the factor the distance <i>x</i> imposes. The mixer does not add anything of its own; it applies one input to the other. (Addition is a different operation — the adder, ⊕, defined beside the difference operator above.)</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Attenuation symbol: a circle with a Bode plot in it — a straight line to the right, then a straight line angled down after the cutoff, with a dashed vertical line at the cutoff"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><polyline points="11,25 37,25 61,49" fill="none" stroke="var(--heat)" stroke-width="2.4"/><line x1="37" y1="14" x2="37" y2="58" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="4 3"/></svg>
-            <div class="symtxt">
-              <p><strong>Attenuation α(<i>x</i>).</strong> What it represents is <strong>the weakening of the temperature signal with distance from the panel</strong>: the signal leaves the panel at full strength and arrives at position <i>x</i> reduced by the factor α(<i>x</i>) — in space, an <strong>exponential decay</strong>, falling steadily from the panel all the way down, with temperature still present, only weaker, at every depth. It is the second input to the mixer, and it is a <strong>transform</strong>: the transform of this system, attenuation over distance. It is also where space — removed from the pad signal at the start — comes back into the diagram, but only in this simplified single-factor form: that is <strong>simplification 7</strong>. In the simplified diagram α(<i>x</i>) is carried straight away in its Bode form; that conversion of the exponential decay into the piecewise linear Bode form is <strong>simplification 8</strong>, and the complex diagram in section 11 shows it as its own step, done by the Bode Plot Converter defined next.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Bode Plot Converter symbol: a circle with a broken line in it — a horizontal line from the left to the centre at one third down from the top, a break at the centre, then a horizontal line from the centre to the right at one third up from the bottom, like a broken square wave"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g stroke="var(--heat)" stroke-width="2.6" stroke-linecap="round"><line x1="14" y1="26" x2="36" y2="26"/><line x1="36" y1="46" x2="58" y2="46"/></g></svg>
-            <div class="symtxt">
-              <p><strong>Bode Plot Converter.</strong> What it represents is a <strong>transform converter for attenuation</strong>: it takes a transform in one form and puts it out in another, and the transform it works on here is the <strong>attenuation over distance</strong>. In goes the attenuation as it actually is in space — an <strong>exponential decay</strong>, the signal weakening smoothly and steadily with distance from the panel — and out comes the same attenuation converted into a <strong>piecewise linear approximation</strong>: the <strong>Bode form</strong>, straight-line pieces standing in for the smooth exponential. The attenuation itself is unchanged — the same weakening, at the same distances — only the form it is carried in changes, and that simpler form is what gives us the <strong>simple filter model</strong>. This conversion is <strong>simplification 8</strong>. In the complex diagram in section 11 it appears as its own step, in the branch above the attenuator, converting the exponential transform before the attenuator feeds the mixer; in the simplified diagram the step is not shown at all, because the attenuation is already carried in its Bode form. And the Bode form has its proper home in the <strong>frequency response</strong> — oscillation amplitude against frequency at a fixed depth, with skin depth δ = √(2α/ω); the spatial attenuation itself stays the exponential (section 9).</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Steady-state filter symbol: a circle with an hourglass in it"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M24 19 H48 L36 36 L48 53 H24 L36 36 Z" fill="none" stroke="var(--ink)" stroke-width="2.2"/></svg>
-            <div class="symtxt">
-              <p><strong>Steady-state filter.</strong> What it represents is <strong>keeping only the settled part of a signal and discarding its transient</strong>: a filter in time, not in space. It stands for the judgement that the variable has been held constant long enough — <i>t</i> ≥ <i>t<sub>s</sub></i>, where <i>t<sub>s</sub></i> is the time the settling takes — that the travel from the old value to the new one can be ignored and only the arrived value kept. It is a filter because it passes part of what reaches it and holds back the rest: the steady state passes, the transient does not. This is <strong>simplification 9</strong> as a step in the diagram, and it applies only when that condition actually holds — move the slider and the transient is real again until it settles.</p>
-            </div>
-          </div>
-          <div class="symrow">
-            <svg viewBox="0 0 72 72" role="img" aria-label="Constant signal symbol: a circle with a straight horizontal line through its centre"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><line x1="13" y1="36" x2="59" y2="36" stroke="var(--heat)" stroke-width="2.4"/></svg>
-            <div class="symtxt">
-              <p><strong>Constant signal.</strong> What it represents is <strong>a signal that no longer changes</strong>: one value, held. It is the end of the chain — the temperature at position <i>x</i> after the transient has been filtered away, <i>T</i> constant at steady state — the state the whole system was travelling toward from the moment the difference operator measured the gap. Every earlier step exists to produce this: a settled temperature, at a place, that stays where it is until the setting changes again.</p>
-            </div>
-          </div>
-        </div>
-        <div class="simp">
+        <p><strong>Mixer (⊗) vs adder (⊕).</strong> These are two different operations on signals, and the diagrams keep them apart. A <strong>mixer</strong> combines its inputs as a <strong>product</strong> — one signal scales the other, as the attenuation α(<i>x</i>) scales the temperature signal at the mixer. An <strong>adder</strong> combines its inputs as a <strong>sum</strong> — the signals are added together into one, as where we add the transient state in with the output of the position distribution filter / transform / mixer, or where <i>T<sub>H</sub></i>(<i>x</i>) and <i>T<sub>H</sub></i>(<i>t</i>) add in the system diagram in section 11. Product gets the mixer, ⊗; addition gets the adder, ⊕.</p>
+                <div class="simp">
           <p class="tag">Simplification 3 — Pad temperature constant in space: T(t, x, y) → T<sub>H</sub>(t)</p>
           <p>Before the chain can start, the pad's temperature field <i>T</i>(<i>t</i>, <i>x</i>, <i>y</i>) is taken as <strong>constant in the spatial dimensions of the pad</strong> — the same everywhere on the pad — so the position parameters <i>x</i> and <i>y</i> are removed and what remains is <i>T<sub>H</sub></i>(<i>t</i>), a function of time only. And even <i>T<sub>H</sub></i>(<i>t</i>) is an <strong>oscillator</strong>: the pad does not jump to its new value, it swings and settles toward it. Space is not gone for good — it comes back later, in simplified form, as the attenuation α(<i>x</i>) at the mixer (simplification 7), with the heat travelling straight down only on the way (simplification 6).</p>
         </div>
@@ -556,42 +251,20 @@
           <p class="tag">Simplification 4 — T<sub>H</sub> = T<sub>s</sub> at steady state</p>
           <p>The heating pad temperature is set equal to the slider setting: <i>T<sub>H</sub></i> = <i>T<sub>s</sub></i>, the steady-state constant value. Before that, the chain starts from two values: <i>T<sub>o</sub></i>, the previous steady-state value, and <i>T<sub>s</sub></i>, the new slider setting. Their difference, from the difference operator, is the signal that drives everything after it — <i>T<sub>H</sub></i> starts at <i>T<sub>o</sub></i> and changes toward <i>T<sub>s</sub></i> based on that difference.</p>
         </div>
-        <p>So, to fix the vocabulary: we have two classifications — <strong>signals</strong> and <strong>filters</strong>. Under signals, our first subclass is the <strong>oscillator</strong> — and the temperature signal here is one, its exponential form a simplification with the swing removed. Between a signal and a filter we now also have a block: the <strong>envelope signal converter (envelope operator)</strong>, which turns an oscillator signal into the simplified exponential that the filter then acts on. And the heating-panel temperature distribution, modelled well as a low-pass filter, is classified here as a <strong>thermodynamic filter</strong>. Filters can also be classified as <strong>transforms — also called mixers, symbol ⊗</strong>, and after the filter we now also have a second kind of converter block: the <strong>transform converter</strong> — here the <strong>Bode Plot Converter</strong>, a type of transform converter, which turns the filter's exponential response into its linear Bode response. Like the envelope signal converter, it is named, not lettered, and drawn by its own symbol: the broken line. And the <strong>shorthand notation</strong> defined just above carries all of them: the difference operator and the addition operator (the adder, ⊕), the oscillator signal, the Boltzmann distribution, the medium change, the envelope signal converter (envelope operator), the exponential signal, the mixer (⊗), the attenuation α(<i>x</i>), the Bode Plot Converter, the steady-state filter, and the final constant signal — each defined by what it represents, beside its picture.</p>
+        <p>So, to fix the vocabulary: we have two classifications — <strong>signals</strong> and <strong>filters</strong>. Under signals, our first subclass is the <strong>oscillator</strong> — and the temperature signal here is one, its exponential form a simplification with the swing removed. Between a signal and a filter we now also have a block: the <strong>envelope signal converter (envelope operator)</strong>, which turns an oscillator signal into the simplified exponential that the filter then acts on. And the heating-panel temperature distribution is classified here as a <strong>thermodynamic filter</strong>. Filters can also be classified as <strong>transforms — also called mixers, symbol ⊗</strong>: the attenuation transform, α(<i>x</i>), is mixed with the main signal at the mixer, as a product. Every block symbol used in the diagrams of section 11 — the difference operator and the addition operator (the adder, ⊕), the oscillator signal, the Boltzmann distribution, the medium change, the envelope signal converter (envelope operator), the exponential signal, the mixer (⊗), the attenuation α(<i>x</i>), the steady-state filter, the constant signal, and the piecewise linear approximation — is defined on the <strong>Symbols tab</strong>, each symbol beside its definition.</p>
       </div>
 
       <h2 class="sec" id="note-system">System diagram — temperature over time at position x</h2>
       <div class="letter">
-        <p>The system above, drawn as block diagrams in the <strong>shorthand notation</strong> — <strong>two</strong> of them. The word-label and graph versions of the same system are in section 10, before the shorthand definitions; these two diagrams are those versions simplified into circles. First, the <strong>complex diagram</strong>: it contains <strong>everything the simplified diagram has</strong> — every block of the shorthand chain, in the same order, with nothing in between removed — <strong>plus the extra symbols and steps</strong> the simplified one leaves out. It does <strong>not assume the Bode plot</strong>: it shows the extra branch where the transform is converted, with the <strong>Bode Plot Converter</strong> sitting above the attenuator — and it shows the fuller pad signal, <i>T<sub>H</sub></i>(<i>x</i>), the position part, <strong>adding</strong> with <i>T<sub>H</sub></i>(<i>t</i>), the time part, at the adder, followed by another <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>) — as an extra step inside the chain rather than instead of any of it. Then, the <strong>simplified diagram</strong> — the shorthand chain, the whole process in its simplest, purest form — where those extra steps are no longer drawn. The final output is <strong><i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i></strong>.</p>
-        <h3>The complex diagram — everything in the simplified diagram, plus T<sub>H</sub>(x) + T<sub>H</sub>(t) and the transform converted above the attenuator</h3>
-        <p>First, the complex diagram — the full system in the shorthand symbols of section 10. Read it against the simplified diagram below: <strong>every block of that chain is here, in the same place and the same order</strong> — <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i>, the difference operator, the Boltzmann block, the oscillator block for <i>T<sub>H</sub></i>(<i>t</i>) before the medium change, the medium change, the oscillator block for <i>T</i><sub>air</sub>(<i>t</i>) after it, the envelope signal converter, the exponential signal after the envelope signal converter, the mixer, the exponential signal after the mixer, the steady-state filter and the constant signal — and the extra symbols and steps are <strong>added into</strong> that chain, not swapped in for parts of it. The extras are two: the <strong>adder</strong>, where <i>T<sub>H</sub></i>(<i>x</i>) adds with the oscillator <i>T<sub>H</sub></i>(<i>t</i>), followed by another <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>); and the conversion branch above the attenuator, where the Bode plot is <strong>not assumed</strong> — the transform starts in its exponential form, and the Bode Plot Converter converts it before the attenuator feeds the mixer. Showing the <i>T<sub>H</sub></i>(<i>x</i>) step here is what justifies omitting it in the simplified diagram: because <i>T<sub>H</sub></i>(<i>x</i>) is constant, adding it just gives back the <i>T<sub>H</sub></i>(<i>t</i>) oscillator — in the simplified diagram there is no adder, so that step is simply skipped.</p>
+        <p>The system above, drawn as a block diagram in the <strong>shorthand notation</strong> — every symbol in it is defined on the <strong>Symbols tab</strong>. This is <strong>the system diagram</strong>: the whole shorthand chain in one diagram. It shows the fuller pad signal, <i>T<sub>H</sub></i>(<i>x</i>), the position part, <strong>adding</strong> with <i>T<sub>H</sub></i>(<i>t</i>), the time part, at the adder, followed by another <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>). The <strong>attenuation α(<i>x</i>)</strong> — the transform of this system, an exponential decay over distance — sits <strong>below the mixer</strong> and feeds up into it, multiplying the <i>T</i><sub>air</sub>(<i>t</i>) signal. The final output is <strong><i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i></strong>.</p>
+        <h3>The system diagram — T<sub>o</sub> and T<sub>s</sub> to T<sub>air</sub> at x and t ≥ t<sub>s</sub></h3>
+        <p>The system diagram — the full system in the shorthand symbols defined on the Symbols tab. Read it left to right: <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i>, the difference operator, the Boltzmann block, the oscillator block for <i>T<sub>H</sub></i>(<i>t</i>) before the medium change, then the <strong>adder</strong>, where <i>T<sub>H</sub></i>(<i>x</i>) adds with the oscillator <i>T<sub>H</sub></i>(<i>t</i>), followed by another <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) again before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>). Then the medium change, the oscillator block for <i>T</i><sub>air</sub>(<i>t</i>) after it, the envelope signal converter, the exponential signal after the envelope signal converter, the mixer, the exponential signal after the mixer, the steady-state filter and the constant signal. The attenuation is the <strong>exponential attenuation curve below the mixer</strong>, feeding up into it — a transform, mixed with the main <i>T</i><sub>air</sub>(<i>t</i>) signal as a product.</p>
         <div class="fig">
-          <svg viewBox="0 0 1540 396" role="img" aria-label="Complex block diagram: the whole simplified shorthand chain with the extra steps added into it, nothing removed. T o, the previous steady-state value, and T s, the slider setting, stacked on the left, feed a difference operator, which produces the difference signal; then a Boltzmann distribution block, near the input; then an oscillator block — a circle with one cycle of a sine wave — the signal T H of t, the time part of the pad signal, before the medium change; then an adder, where T H of x, the position part, drawn as a constant signal — a circle with a straight line through its centre — feeding in from above, adds with T H of t to give T H of t again, an oscillator, because T H of x is constant; then another oscillator block — a circle with one cycle of a sine wave — the signal T H of t again after the adder, because x is constant, before the medium change; then a medium change block; then another oscillator block — a circle with one cycle of a sine wave — the signal T air of t in the air, after the medium change; then an envelope signal converter — the envelope operator; then an exponential signal block, the exponential signal the converter puts out; then a mixer, multiplying that exponential by the attenuation alpha of x; then an exponential signal block, T air of t at position x, after the mixer; then a steady-state filter, keeping only t at or after t s; and finally a constant signal block, T air at x and t at or after t s. Above the mixer sits the conversion branch above the attenuator: at the top an exponential transform circle — attenuation over distance as an exponential decay in space — then an arrow down to the Bode Plot Converter circle — a transform converter for attenuation — which converts the exponential decay into its piecewise linear Bode form; then an arrow down to the attenuator circle — the Bode plot — which feeds down into the mixer, where the time signal runs through the attenuation and alpha of x multiplies">
+          <svg viewBox="0 0 1540 486" role="img" aria-label="System block diagram: the shorthand chain. T o, the previous steady-state value, and T s, the slider setting, stacked on the left, feed a difference operator, which produces the difference signal; then a Boltzmann distribution block, near the input; then an oscillator block — a circle with one cycle of a sine wave — the signal T H of t, the time part of the pad signal, before the medium change; then an adder, where T H of x, the position part, drawn as a constant signal — a circle with a straight line through its centre — feeding in from above, adds with T H of t to give T H of t again, an oscillator, because T H of x is constant; then another oscillator block — a circle with one cycle of a sine wave — the signal T H of t again after the adder, because x is constant, before the medium change; then a medium change block; then another oscillator block — a circle with one cycle of a sine wave — the signal T air of t in the air, after the medium change; then an envelope signal converter — the envelope operator; then an exponential signal block, the exponential signal the converter puts out; then a mixer, multiplying that exponential by the attenuation alpha of x; then an exponential signal block, T air of t at position x, after the mixer; then a steady-state filter, keeping only t at or after t s; and finally a constant signal block, T air at x and t at or after t s. Below the mixer sits the attenuation alpha of x — an exponential decay curve in a circle — feeding up into the mixer, where the time signal runs through the attenuation and alpha of x multiplies">
             <defs>
               <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
               <clipPath id="cxClipMed"><circle cx="640" cy="320" r="22"/></clipPath>
             </defs>
-            <text x="1042" y="16" font-size="10.5" fill="var(--muted)" text-anchor="middle">the transform, converted — above the attenuator</text>
-            <!-- conversion branch, above the attenuator / mixer -->
-            <circle cx="1042" cy="58" r="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M1020 42 C1034 44 1044 50 1050 60 C1054 67 1056 72 1058 74" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
-            <circle cx="1042" cy="146" r="28" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g stroke="var(--heat)" stroke-width="2.6" stroke-linecap="round"><line x1="1018" y1="136" x2="1042" y2="136"/><line x1="1042" y1="156" x2="1066" y2="156"/></g>
-            <circle cx="1042" cy="234" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <polyline points="1024,226 1042,226 1060,242" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <line x1="1042" y1="218" x2="1042" y2="250" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <line x1="1042" y1="86" x2="1042" y2="114" marker-end="url(#arrC)"/>
-              <line x1="1042" y1="174" x2="1042" y2="206" marker-end="url(#arrC)"/>
-              <line x1="1042" y1="258" x2="1042" y2="292" marker-end="url(#arrC)"/>
-            </g>
-            <g font-size="11" fill="var(--ink)">
-              <text x="1082" y="56" font-weight="700">EXPONENTIAL TRANSFORM</text>
-              <text x="1082" y="72" font-size="10.5" fill="var(--muted)">attenuation over distance — exponential decay in space</text>
-              <text x="1082" y="144" font-weight="700">BODE PLOT CONVERTER</text>
-              <text x="1082" y="160" font-size="10.5" fill="var(--muted)">a transform converter for attenuation — exponential decay → piecewise linear (Bode)</text>
-              <text x="1082" y="232" font-weight="700">ATTENUATOR</text>
-              <text x="1082" y="248" font-size="10.5" fill="var(--muted)">Bode plot — the converted transform, α(x)</text>
-            </g>
             <!-- T_H(x) feed, from above the adder -->
             <text x="440" y="176" font-size="10" fill="var(--muted)" text-anchor="middle">position part — constant</text>
             <circle cx="440" cy="211" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
@@ -670,6 +343,14 @@
             <!-- 10 mixer -->
             <circle cx="1042" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
             <g stroke="var(--ink)" stroke-width="2.4"><line x1="1031" y1="309" x2="1053" y2="331"/><line x1="1053" y1="309" x2="1031" y2="331"/></g>
+            <!-- attenuation feed from below the mixer: the exponential attenuation curve -->
+            <circle cx="1042" cy="424" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+            <path d="M1024 410 C1036 412 1046 420 1052 430 C1056 436 1058 440 1060 442" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
+            <path d="M1042 398 L1042 348" stroke="var(--ink)" stroke-width="1.8" fill="none" marker-end="url(#arrC)"/>
+            <g font-size="10.5" fill="var(--ink)" text-anchor="middle">
+              <text x="1042" y="466" font-weight="700">ATTENUATION α(x)</text>
+              <text x="1042" y="480" fill="var(--muted)">exponential over distance</text>
+            </g>
             <!-- 11 exponential signal, after the mixer -->
             <circle cx="1142" cy="320" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
             <path d="M1117 337 C1133 337 1143 335 1151 327 C1158 320 1162 311 1164 305 L1167 305" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
@@ -715,139 +396,111 @@
               <text x="1342" y="376" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
             </g>
           </svg>
-          <p class="figcap">The complex diagram — <strong>everything in the simplified diagram, in the same order, plus the extra steps</strong>; nothing in between is removed. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> stacked → <strong>difference operator</strong> → difference signal → <strong>Boltzmann</strong> (simplifications 1 and 2) → <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>), the time part of the pad signal. Then the first extra step: <i>T<sub>H</sub></i>(<i>x</i>) — the position part, drawn as a <strong>constant signal</strong> — <strong>adds</strong> with <i>T<sub>H</sub></i>(<i>t</i>) at the <strong>adder, ⊕</strong>, and after the adder there is another <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>) again, before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>). Then the rest of the simplified chain, unchanged: <strong>medium change</strong> (pad → air) → <strong>oscillator</strong> (sine wave): <i>T</i><sub>air</sub>(<i>t</i>) → <strong>envelope signal converter (envelope operator)</strong> → <strong>exponential signal</strong> → <strong>mixer, ⊗</strong> → <strong>exponential signal</strong> after the mixer, <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> → <strong>steady-state filter</strong> (only <i>t</i> ≥ <i>t<sub>s</sub></i>) → <strong>constant signal</strong>: <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>. The second extra step is the branch above the attenuator: the attenuation starts as the <strong>exponential transform</strong> — attenuation over distance as an exponential decay in space — and the <strong>Bode Plot Converter</strong>, a transform converter for attenuation, converts that exponential decay into the <strong>piecewise linear Bode form</strong> of the <strong>attenuator</strong>, which feeds down into the mixer, where the time signal runs through the attenuation and <strong>α(<i>x</i>) multiplies</strong>. And that is exactly why <i>T<sub>H</sub></i>(<i>x</i>) can be <strong>omitted in the simplified diagram</strong> below: because <i>T<sub>H</sub></i>(<i>x</i>) is constant, adding it to <i>T<sub>H</sub></i>(<i>t</i>) just gives back the <i>T<sub>H</sub></i>(<i>t</i>) oscillator — so leaving it out changes nothing. The complex diagram shows the step in full, so the omission in the simple diagram is justified: <i>T<sub>H</sub></i>(<i>x</i>) is shown here precisely to show that it just becomes <i>T<sub>H</sub></i>(<i>t</i>) again. The <strong>Bode Plot Converter</strong> is likewise omitted in the simplified diagram — its simplification is simply assumed there, and the attenuator is used directly in its Bode form — because the complex diagram here is the one that shows the converter branch and its conversion.</p>
-        </div>
-        <h3>The simplified diagram — the shorthand chain — T<sub>o</sub> and T<sub>s</sub> to T<sub>air</sub> at x and t ≥ t<sub>s</sub></h3>
-        <p>Then, the same system simplified, in the <strong>shorthand notation</strong> defined in section 10 — the <strong>Bode Plot Converter</strong> is omitted here — its simplification is simply assumed, and the attenuator is used directly in its Bode form — and neither is the <i>T<sub>H</sub></i>(<i>x</i>) + <i>T<sub>H</sub></i>(<i>t</i>) input of the complex diagram: the attenuation is drawn straight away as the Bode low-pass circle. The complex diagram above is the one that shows the converter branch; the simplified diagram assumes it, and the input is <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i>: all the blocks drawn in a straight line, one after the other, each block a circle with its symbol inside. Read it left to right. <i>T<sub>o</sub></i> (the previous steady-state value) and <i>T<sub>s</sub></i> (the slider setting) are stacked on the left and feed the <strong>difference operator</strong>, which produces the difference signal. The <strong>Boltzmann</strong> block sits near the input, where the average temperature is formed — simplification 1 is made before the chain starts and carried through it. After the Boltzmann block comes the <strong>oscillator</strong> block for <i>T<sub>H</sub></i>(<i>t</i>) — the pad signal with <i>T</i>(<i>t</i>, <i>x</i>, <i>y</i>) taken constant in space (simplification 3) and <i>T<sub>H</sub></i> = <i>T<sub>s</sub></i> at steady state (simplification 4) — sitting <strong>before the medium change</strong>. The <strong>medium change</strong> turns <i>T<sub>H</sub></i>(<i>t</i>) into <i>T</i><sub>air</sub>(<i>t</i>), and that signal has its own <strong>oscillator</strong> block <strong>after the medium change</strong>; the <strong>envelope signal converter (envelope operator)</strong> takes its envelope and puts out the exponential, drawn as the exponential signal block straight after it; the <strong>mixer</strong> multiplies that exponential by the attenuation α(<i>x</i>) — the Bode low-pass circle feeding in from below — giving <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i>, the same exponential shape, attenuated; and the <strong>steady-state filter</strong> keeps only <i>t</i> ≥ <i>t<sub>s</sub></i>, leaving the final block: <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>. This simplified version is the crux of this note: the whole process defined in its simplest, purest form.</p>
-        <div class="fig">
-          <svg viewBox="0 0 1300 330" role="img" aria-label="Shorthand block diagram in a straight line: T o, the previous steady-state value, and T s, the slider setting, stacked on the left, feed a difference operator — a circle with a minus sign — which produces the difference signal; then a Boltzmann distribution block — a circle with a distribution curve — near the input; then an oscillator block — a circle with one cycle of a sine wave — the pad signal T H of t, before the medium change; then a medium change block — a circle with a hash — turning it into T air of t; then a second oscillator block — a circle with one cycle of a sine wave — the signal T air of t in the air, after the medium change; then an envelope signal converter — the envelope operator, a circle with a curved dashed diamond whose diagonal sides are exponential curves like envelope lines, concave inwards — putting out an exponential signal; then an exponential signal block — a circle with an exponential curve in it; then a mixer — a circle with a cross — multiplying it by the attenuation alpha of x, drawn as a Bode low-pass circle feeding in from below, giving T air of t at position x; then an exponential signal block — a circle with an exponential curve in it — T air of t at position x, after the mixer; then a steady-state filter — a circle with an hourglass — keeping only t at or after t s; and finally a constant signal block — a circle with a straight line — T air at x and t at or after t s">
-            <defs>
-              <marker id="arrS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>
-              <clipPath id="chainClipMed"><circle cx="424" cy="130" r="24"/></clipPath>
-            </defs>
-            <!-- stacked inputs -->
-            <g font-size="12.5" fill="var(--ink)" text-anchor="middle">
-              <rect x="4" y="86" width="62" height="34" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="35" y="108" font-weight="700">T<tspan baseline-shift="sub" font-size="9">o</tspan></text>
-              <rect x="4" y="140" width="62" height="34" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-              <text x="35" y="162" font-weight="700">T<tspan baseline-shift="sub" font-size="9">s</tspan></text>
-            </g>
-            <g font-size="10" fill="var(--muted)">
-              <text x="4" y="76">previous steady state</text>
-              <text x="4" y="190">slider setting</text>
-            </g>
-            <!-- arrows inputs -> difference -->
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <path d="M66 103 L100 103 L100 118" marker-end="url(#arrS)"/>
-              <path d="M66 157 L100 157 L100 140" marker-end="url(#arrS)"/>
-            </g>
-            <!-- main arrows -->
-            <g stroke="var(--ink)" stroke-width="1.8" fill="none">
-              <line x1="148" y1="130" x2="186" y2="130" marker-end="url(#arrS)"/>
-              <line x1="250" y1="130" x2="288" y2="130" marker-end="url(#arrS)"/>
-              <line x1="352" y1="130" x2="390" y2="130" marker-end="url(#arrS)"/>
-              <line x1="454" y1="130" x2="492" y2="130" marker-end="url(#arrS)"/>
-              <line x1="556" y1="130" x2="594" y2="130" marker-end="url(#arrS)"/>
-              <line x1="658" y1="130" x2="696" y2="130" marker-end="url(#arrS)"/>
-              <line x1="760" y1="130" x2="798" y2="130" marker-end="url(#arrS)"/>
-              <line x1="862" y1="130" x2="900" y2="130" marker-end="url(#arrS)"/>
-              <line x1="964" y1="130" x2="1002" y2="130" marker-end="url(#arrS)"/>
-              <line x1="1066" y1="130" x2="1104" y2="130" marker-end="url(#arrS)"/>
-              <line x1="1168" y1="130" x2="1176" y2="130" marker-end="url(#arrS)"/>
-            </g>
-            <!-- signal labels above arrows -->
-            <g font-size="10.5" fill="var(--muted)" text-anchor="middle">
-              <text x="167" y="112">ΔT signal</text>
-              <text x="677" y="112">exponential</text>
-              <text x="881" y="112">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
-              <text x="1085" y="112">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
-            </g>
-            <!-- 1 difference -->
-            <circle cx="118" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <line x1="106" y1="130" x2="130" y2="130" stroke="var(--ink)" stroke-width="3"/>
-            <!-- 2 Boltzmann -->
-            <circle cx="220" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M202 146 C207 146 210 122 215 120 C220 118 223 132 228 140 C232 146 236 148 241 148" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <line x1="225" y1="118" x2="225" y2="150" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
-            <!-- 3 oscillator — T_H(t), before the medium change -->
-            <circle cx="322" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M301 130 C306 113 312 113 316 130 C320 147 326 147 330 130 C333 118 337 118 343 130" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <!-- 4 medium change -->
-            <circle cx="424" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g clip-path="url(#chainClipMed)" stroke="var(--ink)" stroke-width="1.8">
-              <line x1="400" y1="106" x2="448" y2="154"/><line x1="406" y1="101" x2="453" y2="148"/><line x1="395" y1="112" x2="442" y2="159"/>
-              <line x1="448" y1="106" x2="400" y2="154"/><line x1="453" y1="112" x2="406" y2="159"/><line x1="442" y1="101" x2="395" y2="148"/>
-            </g>
-            <circle cx="424" cy="130" r="26" fill="none" stroke="var(--ink)" stroke-width="2"/>
-            <!-- 5 oscillator — T_air(t), after the medium change -->
-            <circle cx="526" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M505 130 C510 113 516 113 520 130 C524 147 530 147 534 130 C537 118 541 118 547 130" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <!-- 6 envelope signal converter (envelope operator) -->
-            <circle cx="628" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g fill="none" stroke="var(--heat)" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"><path d="M628 109 Q631 127 649 130"/><path d="M649 130 Q631 133 628 151"/><path d="M628 151 Q625 133 607 130"/><path d="M607 130 Q625 127 628 109"/></g>
-            <!-- 7 exponential signal, after the envelope converter -->
-            <circle cx="730" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M705 147 C721 147 731 145 739 137 C746 130 750 121 752 115 L755 115" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
-            <!-- 8 mixer -->
-            <circle cx="832" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <g stroke="var(--ink)" stroke-width="2.4"><line x1="821" y1="119" x2="843" y2="141"/><line x1="843" y1="119" x2="821" y2="141"/></g>
-            <!-- 9 exponential signal, after the mixer -->
-            <circle cx="934" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M909 147 C925 147 935 145 943 137 C950 130 954 121 956 115 L959 115" fill="none" stroke="var(--heat)" stroke-width="2.4"/>
-            <!-- 10 steady-state filter -->
-            <circle cx="1036" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <path d="M1025 115 H1047 L1036 130 L1047 145 H1025 L1036 130 Z" fill="none" stroke="var(--ink)" stroke-width="2"/>
-            <!-- 11 constant -->
-            <circle cx="1138" cy="130" r="26" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <line x1="1118" y1="130" x2="1158" y2="130" stroke="var(--heat)" stroke-width="2.4"/>
-            <!-- output label -->
-            <g font-size="12" fill="var(--ink)">
-              <text x="1184" y="124" font-weight="700">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and</text>
-              <text x="1184" y="140" font-size="10.5" fill="var(--muted)">t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan> — constant,</text>
-              <text x="1184" y="154" font-size="10.5" fill="var(--muted)">steady state</text>
-            </g>
-            <!-- block labels below -->
-            <g font-size="10.5" fill="var(--ink)" text-anchor="middle">
-              <text x="118" y="176" font-weight="700">DIFFERENCE</text>
-              <text x="118" y="190" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">s</tspan> − T<tspan baseline-shift="sub" font-size="8">o</tspan></text>
-              <text x="220" y="176" font-weight="700">BOLTZMANN</text>
-              <text x="220" y="190" fill="var(--muted)">particles → ⟨E⟩</text>
-              <text x="322" y="176" font-weight="700">OSCILLATOR</text>
-              <text x="322" y="190" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">H</tspan>(t)</text>
-              <text x="424" y="176" font-weight="700">MEDIUM CHANGE</text>
-              <text x="424" y="190" fill="var(--muted)">pad → air</text>
-              <text x="526" y="176" font-weight="700">OSCILLATOR</text>
-              <text x="526" y="190" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t)</text>
-              <text x="628" y="176" font-weight="700" font-size="10">ENVELOPE CONVERTER</text>
-              <text x="628" y="190" fill="var(--muted)">envelope operator</text>
-              <text x="730" y="176" font-weight="700" font-size="10">EXPONENTIAL SIGNAL</text>
-              <text x="730" y="190" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t)</text>
-              <text x="832" y="176" font-weight="700">MIXER</text>
-              <text x="832" y="190" fill="var(--muted)">× α(x) — product</text>
-              <text x="934" y="176" font-weight="700" font-size="10">EXPONENTIAL SIGNAL</text>
-              <text x="934" y="190" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan>(t) at x</text>
-              <text x="1036" y="176" font-weight="700">STEADY-STATE FILTER</text>
-              <text x="1036" y="190" fill="var(--muted)">temporal · t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
-              <text x="1138" y="176" font-weight="700">CONSTANT SIGNAL</text>
-              <text x="1138" y="190" fill="var(--muted)">T<tspan baseline-shift="sub" font-size="8">air</tspan> at x and t ≥ t<tspan baseline-shift="sub" font-size="8">s</tspan></text>
-            </g>
-            <!-- attenuation feed from below -->
-            <circle cx="832" cy="262" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
-            <polyline points="812,252 832,252 852,272" fill="none" stroke="var(--heat)" stroke-width="2.2"/>
-            <line x1="832" y1="240" x2="832" y2="282" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
-            <path d="M832 234 L832 160" stroke="var(--ink)" stroke-width="1.8" fill="none" marker-end="url(#arrS)"/>
-            <g font-size="10.5" fill="var(--ink)" text-anchor="middle">
-              <text x="832" y="306" font-weight="700">ATTENUATION α(x)</text>
-              <text x="832" y="320" fill="var(--muted)">Bode low-pass · cutoff dashed</text>
-              <text x="869" y="200" text-anchor="start" fill="var(--muted)">α(x) feeds the mixer</text>
-            </g>
-          </svg>
-          <p class="figcap">The shorthand chain. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> stacked → <strong>difference operator</strong> (circle, minus) → difference signal → <strong>Boltzmann</strong> (distribution curve; simplification 1, made before the chain starts and carried through, with the integral average of simplification 2) → <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>), the pad taken constant in space (simplification 3) and equal to <i>T<sub>s</sub></i> at steady state (simplification 4) → <strong>medium change</strong> (hash) → <strong>oscillator</strong> (sine wave): <i>T</i><sub>air</sub>(<i>t</i>) → <strong>envelope signal converter — the envelope operator</strong> (curved dashed diamond, its diagonal sides exponential curves like envelope lines, concave inwards; simplification 5) → exponential signal → <strong>mixer</strong> (×, a product) with <strong>attenuation α(<i>x</i>)</strong> (space back in simplified form, simplification 7; the heat travelling straight down only, simplification 6; drawn as a Bode low-pass circle — the Bode plot, simplification 8) → <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> — drawn as the <strong>exponential signal</strong> circle after the mixer, the same exponential symbol, because attenuation does not change the shape → <strong>steady-state filter</strong> (hourglass; simplification 9) → <strong>constant signal</strong> (straight line): <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>. The exponential is drawn up to the right; the other three ways (section 10) are interchangeable here, since the direction depends on the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>. There is no Bode Plot Converter block in this diagram: it is omitted because its simplification is simply assumed here — the attenuator is used directly in its Bode form — while the complex diagram above is the one that shows the converter branch. The word and graph versions in section 10, before the shorthand definitions, draw the same system the normal way — labelled blocks, then graphs in the blocks.</p>
+          <p class="figcap">The system diagram. <i>T<sub>o</sub></i> and <i>T<sub>s</sub></i> stacked → <strong>difference operator</strong> → difference signal → <strong>Boltzmann</strong> (simplifications 1 and 2) → <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>), the time part of the pad signal. Then <i>T<sub>H</sub></i>(<i>x</i>) — the position part, drawn as a <strong>constant signal</strong> — <strong>adds</strong> with <i>T<sub>H</sub></i>(<i>t</i>) at the <strong>adder, ⊕</strong>, and after the adder there is another <strong>oscillator</strong> (sine wave): <i>T<sub>H</sub></i>(<i>t</i>) again, before the medium change — because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the position part is the same everywhere, so even after the addition it just collapses to <i>T<sub>H</sub></i>(<i>t</i>) again, and that oscillator after the adder is still <i>T<sub>H</sub></i>(<i>t</i>). Then: <strong>medium change</strong> (pad → air) → <strong>oscillator</strong> (sine wave): <i>T</i><sub>air</sub>(<i>t</i>) → <strong>envelope signal converter (envelope operator)</strong> → <strong>exponential signal</strong> → <strong>mixer, ⊗</strong>, with the <strong>attenuation α(<i>x</i>)</strong> below it — an exponential decay curve, the transform of this system — feeding up into it and <strong>multiplying</strong> → <strong>exponential signal</strong> after the mixer, <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> → <strong>steady-state filter</strong> (only <i>t</i> ≥ <i>t<sub>s</sub></i>) → <strong>constant signal</strong>: <i>T</i><sub>air</sub> at <i>x</i> and <i>t</i> ≥ <i>t<sub>s</sub></i>.</p>
         </div>
       </div>
     </section>
 
-    
+    <!-- ============ SYMBOLS ============ -->
+    <section id="view-symbols" role="tabpanel" aria-labelledby="tab-symbols" hidden>
+      <div class="letter">
+        <p>All of the block diagram symbols — the symbol on the left, its definition on the right.</p>
+        <div class="symdefs">
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Difference operator symbol: a circle with a minus sign in it"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><line x1="22" y1="36" x2="50" y2="36" stroke="var(--ink)" stroke-width="3"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Difference operator.</strong> What it represents is a <strong>comparison between two steady values</strong>: the previous steady-state value, <i>T<sub>o</sub></i>, and the new slider setting, <i>T<sub>s</sub></i>. Their difference, <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>, is the gap the whole rest of the chain has to close — its size says how far the temperature has to travel, and its sign says which way: up if <i>T<sub>s</sub></i> &gt; <i>T<sub>o</sub></i>, down if <i>T<sub>s</sub></i> &lt; <i>T<sub>o</sub></i>. Nothing has heated or cooled yet at this step; the difference operator only measures the change that has been asked for.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Addition operator symbol: a circle with a plus sign in it, the adder"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g stroke="var(--ink)" stroke-width="3"><line x1="22" y1="36" x2="50" y2="36"/><line x1="36" y1="22" x2="36" y2="50"/></g></svg>
+                    <div class="symtxt">
+                      <p><strong>Addition operator — the adder, ⊕.</strong> What it represents is <strong>two signals combined into one by adding them</strong>: the pair of the difference operator, for the places where a signal is genuinely the sum of two parts. Its place in this note is the system diagram in section 11, where <i>T<sub>H</sub></i>(<i>x</i>) — the position part of the pad signal, a constant — adds with <i>T<sub>H</sub></i>(<i>t</i>) — the time part, an oscillator. Because <i>T<sub>H</sub></i>(<i>x</i>) is constant, the output of the adding is an oscillator that just becomes <i>T<sub>H</sub></i>(<i>t</i>) again: adding a constant to the oscillator does not change its kind. Adding is this operator; multiplying is the mixer, ⊗; subtracting is the difference operator.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Oscillator signal symbol: a circle with one cycle of a sine wave across its middle"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 36 C14 12 22 12 28 36 C34 60 42 60 48 36 C52 22 58 22 64 36" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Oscillator signal.</strong> What it represents is a <strong>signal that swings around a target value and settles onto it</strong>: it overshoots, comes back, overshoots less, and the swings die away inside a decaying envelope until only the target remains. That is the true shape of the temperature signals in this note before they are simplified: <i>T<sub>H</sub></i>(<i>t</i>) at the pad is an oscillator signal, and after the medium change <i>T</i><sub>air</sub>(<i>t</i>) is another — the air swings around the pad temperature as it closes in on it. The smooth exponential is this signal with the swing removed (simplification 5), not the signal itself.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Boltzmann distribution symbol: a circle with a distribution curve in it — a peak with a long tail — and a dashed line at the average"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M12 52 C18 52 22 20 28 18 C34 16 38 32 44 42 C49 50 54 53 60 53" fill="none" stroke="var(--heat)" stroke-width="2.4"/><line x1="40" y1="16" x2="40" y2="56" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="4 3"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Boltzmann distribution.</strong> What it represents is <strong>the spread of energies across all the particles of the air at one instant</strong> — few nearly still, most in the middle, a long tail of a few racing — and the temperature that spread amounts to. It stands for two steps: <strong>simplification 1</strong>, the whole set of particles and their bounces replaced by this one distribution, and <strong>simplification 2</strong>, that distribution collapsed by its integral average, ⟨<i>E</i>⟩ = ∫ <i>E</i> · <i>P</i>(<i>E</i>) d<i>E</i> = (3/2) <i>k<sub>B</sub> T</i>, into the single number <i>T</i>. It is the <strong>first simplification</strong>: made before the diagram even starts and carried through the whole chain — every temperature anywhere in the diagrams is already this average, not any one particle's motion.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Medium change symbol: a circle with a hash in it — three diagonal lines one way crossed by three diagonal lines the other way"><defs><clipPath id="symClipMed"><circle cx="36" cy="36" r="28"/></clipPath></defs><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g clip-path="url(#symClipMed)" stroke="var(--ink)" stroke-width="2"><line x1="10" y1="10" x2="62" y2="62"/><line x1="17" y1="4" x2="68" y2="55"/><line x1="4" y1="17" x2="55" y2="68"/><line x1="62" y1="10" x2="10" y2="62"/><line x1="57" y1="2" x2="2" y2="57"/><line x1="72" y1="13" x2="13" y2="72"/></g></svg>
+                    <div class="symtxt">
+                      <p><strong>Medium change.</strong> What it represents is <strong>the signal crossing from one medium into another</strong> — here, heat passing from the solid heating pad into the air — and coming out as the corresponding signal in the new medium: <i>T<sub>H</sub></i>(<i>t</i>) becomes <i>T</i><sub>air</sub>(<i>t</i>). The two sides are not the same substance and do not respond the same way: the pad is held at its temperature by the thermostat, while the air has to be brought there by contact. <strong>The medium-change math:</strong> the air chases the pad by Newton's law, d<i>T</i><sub>air</sub>/d<i>t</i> = <i>k</i>·(<i>T<sub>H</sub></i> − <i>T</i><sub>air</sub>), so <i>T</i><sub>air</sub>(<i>t</i>) = <i>T<sub>H</sub></i> − (<i>T<sub>H</sub></i> − <i>T<sub>o</sub></i>)·<i>e</i><sup>−<i>kt</i></sup> as its mean — an oscillator in the air, swinging around the pad temperature, with the coupling <i>k</i> set by the contact between pad and air. The kind of signal does not change across it: oscillator in, oscillator out — what changes is the medium carrying it, and with it the constants that govern it.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Envelope signal converter symbol — the envelope operator: a circle with a curved dashed diamond in it, each diagonal side an exponential curve like an envelope line, concave inwards toward the centre"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g fill="none" stroke="var(--heat)" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"><path d="M36 11 Q40 32 61 36"/><path d="M61 36 Q40 40 36 61"/><path d="M36 61 Q32 40 11 36"/><path d="M11 36 Q32 32 36 11"/></g></svg>
+                    <div class="symtxt">
+                      <p><strong>Envelope signal converter — the envelope operator.</strong> What it represents is <strong>the envelope of an oscillator signal being taken as the signal</strong>. An oscillator swings around its mean inside a decaying envelope; this converter — a type of <strong>signal converter</strong> — keeps that envelope and the mean it bounds, and drops the swing between them, so an <strong>exponential</strong> comes out where an oscillator went in. It changes the <em>kind</em> of signal, not its destination or its size: the exponential it produces settles to the same target, along the same mean, as the oscillator it replaces. This is <strong>simplification 5</strong> as a step in the diagram — a conversion we perform on the signal so the rest of the chain can work with the simple form, not a process happening in the tank.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Exponential signal symbol: a circle with an exponential curve in it, starting low on the left, rising to the right and levelling off"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M11 53 C27 53 37 51 45 43 C52 36 56 27 58 21 L61 21" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Exponential signal.</strong> What it represents is <strong>a signal that closes on its target at a rate proportional to the gap that remains</strong> — fast while the gap is big, slowing as the gap shrinks, levelling off as it arrives: the Newton settling of section 5, <i>T</i>(<i>t</i>) = <i>T<sub>s</sub></i> − (<i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>)·<i>e</i><sup>−<i>kt</i></sup>. It is the simplified form of the oscillator signal — the oscillator's envelope and mean with the swing removed — and it is the form the envelope signal converter puts out. It appears twice in the chain: once as that converter's output, and once again after the mixer, because attenuation scales an exponential's size without changing its kind — the signal at position <i>x</i> is still this same exponential settling, only weaker. Whether it climbs or falls is set by the signal itself, by the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>: heating and cooling are the same exponential, closing the gap from opposite sides.</p>
+                      <p><strong>The equivalent diagrams.</strong> This symbol can be drawn four ways — the curve climbing or falling, toward the right or toward the left — and all four are <strong>equivalent symbols</strong>: each one stands for the same exponential signal, the same closing-on-the-target at a rate proportional to the gap. When the direction is <strong>specifically known</strong>, the drawing that matches it can be used: heating, <i>T<sub>s</sub></i> &gt; <i>T<sub>o</sub></i>, climbs — drawn here up to the right, the form this note uses — and cooling, <i>T<sub>s</sub></i> &lt; <i>T<sub>o</sub></i>, falls. But when the direction is <strong>unknown</strong>, the four are <strong>interchangeable</strong>: any one of them can be drawn, and it still means the exponential — the direction is then carried by the signal itself, by the sign of <i>T<sub>s</sub></i> − <i>T<sub>o</sub></i>, not by which way the curve in the circle happens to lean.</p>
+                      <div class="exp4" role="group" aria-label="The four equivalent diagrams of the exponential signal symbol: the curve drawn up to the right, down to the right, up to the left, and down to the left — four equivalent symbols for the same exponential signal">
+                        <figure>
+                          <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn up to the right: the curve starts low on the left, rises to the right and levels off at the top"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 42 C20 42 28 40 34 33 C39 27 42 20 43 16 L46 16" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                          <figcaption>up to the right</figcaption>
+                        </figure>
+                        <figure>
+                          <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn down to the right: the curve starts high on the left, falls to the right and levels off at the bottom"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M8 14 C20 14 28 16 34 23 C39 29 42 36 43 40 L46 40" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                          <figcaption>down to the right</figcaption>
+                        </figure>
+                        <figure>
+                          <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn up to the left: the curve starts low on the right, rises to the left and levels off at the top"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M48 42 C36 42 28 40 22 33 C17 27 14 20 13 16 L10 16" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                          <figcaption>up to the left</figcaption>
+                        </figure>
+                        <figure>
+                          <svg viewBox="0 0 56 56" role="img" aria-label="Exponential symbol drawn down to the left: the curve starts high on the right, falls to the left and levels off at the bottom"><circle cx="28" cy="28" r="24" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M48 14 C36 14 28 16 22 23 C17 29 14 36 13 40 L10 40" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                          <figcaption>down to the left</figcaption>
+                        </figure>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Mixer symbol: a circle with an X in it, the product sign"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g stroke="var(--ink)" stroke-width="2.6"><line x1="23" y1="23" x2="49" y2="49"/><line x1="49" y1="23" x2="23" y2="49"/></g></svg>
+                    <div class="symtxt">
+                      <p><strong>Mixer — ⊗.</strong> What it represents is <strong>one signal scaling another by multiplication</strong>: a transform carried out as a product. In this note the mixer is where the temperature signal meets space: the exponential <i>T</i><sub>air</sub>(<i>t</i>) runs through the attenuation and is multiplied by it — <i>T</i><sub>air</sub>(<i>t</i>) × α(<i>x</i>) = <i>T</i><sub>air</sub>(<i>t</i>) at position <i>x</i> — so what comes out is the same signal, reduced by exactly the factor the distance <i>x</i> imposes. The mixer does not add anything of its own; it applies one input to the other. (Addition is a different operation — the adder, ⊕, defined beside the difference operator above.)</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Attenuation symbol: a circle with an exponential decay curve in it, starting high on the left and falling steadily to the right"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M13 20 C26 22 36 28 44 38 C50 45 54 50 59 52" fill="none" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Attenuation α(<i>x</i>).</strong> What it represents is <strong>the weakening of the temperature signal with distance from the panel</strong>: the signal leaves the panel at full strength and arrives at position <i>x</i> reduced by the factor α(<i>x</i>) — in space, an <strong>exponential decay</strong>, falling steadily from the panel all the way down, with temperature still present, only weaker, at every depth. It is the second input to the mixer, and it is a <strong>transform</strong>: the transform of this system, attenuation over distance. It is also where space — removed from the pad signal at the start — comes back into the diagram, but only in this simplified single-factor form: that is <strong>simplification 7</strong>. In the diagrams it sits <strong>below the mixer</strong> and feeds up into it.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Piecewise linear approximation symbol: a circle with a broken line in it — a horizontal line from the left to the centre at one third down from the top, a break at the centre, then a horizontal line from the centre to the right at one third up from the bottom, like a broken square wave"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><g stroke="var(--heat)" stroke-width="2.6" stroke-linecap="round"><line x1="14" y1="26" x2="36" y2="26"/><line x1="36" y1="46" x2="58" y2="46"/></g></svg>
+                    <div class="symtxt">
+                      <p><strong>Piecewise linear approximation.</strong> What it represents is a <strong>transform converter</strong> for attenuation. A <strong>transform converter</strong> is a block in a system diagram that takes a transform in one form and puts it out in another form: it changes the <em>form of the transform — the form of the response</em>, not the kind of signal — the underlying transform, what it does to the signal, stays exactly the same; only the form it is carried in changes. That is what separates it from the envelope signal converter (the envelope operator): an envelope signal converter changes the kind of signal (oscillator in, exponential signal out), while a transform converter changes the form a response is expressed in. A transform converter has no letter notation — it is named for the conversion it performs. This converter works on the <strong>attenuation over distance</strong>: in goes the attenuation as it actually is in space — an <strong>exponential decay</strong>, the signal weakening smoothly and steadily with distance from the panel — and out comes the same attenuation converted into a <strong>piecewise linear approximation</strong>: straight-line pieces standing in for the smooth exponential. The attenuation itself is unchanged — the same weakening, at the same distances — only the form it is carried in changes. This symbol is <strong>not used in the Temperature block diagram</strong> — the attenuation there is carried as the exponential itself, in the exponential curve below the mixer — but it is kept here because it can be used later.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Steady-state filter symbol: a circle with an hourglass in it"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M24 19 H48 L36 36 L48 53 H24 L36 36 Z" fill="none" stroke="var(--ink)" stroke-width="2.2"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Steady-state filter.</strong> What it represents is <strong>keeping only the settled part of a signal and discarding its transient</strong>: a filter in time, not in space. It stands for the judgement that the variable has been held constant long enough — <i>t</i> ≥ <i>t<sub>s</sub></i>, where <i>t<sub>s</sub></i> is the time the settling takes — that the travel from the old value to the new one can be ignored and only the arrived value kept. It is a filter because it passes part of what reaches it and holds back the rest: the steady state passes, the transient does not. This is <strong>simplification 8</strong> as a step in the diagram, and it applies only when that condition actually holds — move the slider and the transient is real again until it settles.</p>
+                    </div>
+                  </div>
+                  <div class="symrow">
+                    <svg viewBox="0 0 72 72" role="img" aria-label="Constant signal symbol: a circle with a straight horizontal line through its centre"><circle cx="36" cy="36" r="30" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><line x1="13" y1="36" x2="59" y2="36" stroke="var(--heat)" stroke-width="2.4"/></svg>
+                    <div class="symtxt">
+                      <p><strong>Constant signal.</strong> What it represents is <strong>a signal that no longer changes</strong>: one value, held. It is the end of the chain — the temperature at position <i>x</i> after the transient has been filtered away, <i>T</i> constant at steady state — the state the whole system was travelling toward from the moment the difference operator measured the gap. Every earlier step exists to produce this: a settled temperature, at a place, that stays where it is until the setting changes again.</p>
+                    </div>
+                  </div>
+                </div>
+      </div>
+    </section>
+
     <!-- ============ WATER LEVEL ============ -->
     <section id="view-water" role="tabpanel" aria-labelledby="tab-water" hidden>
       <div class="stage">

@@ -13,7 +13,7 @@
         });
       });
     }
-    wireTabs('.tab', ['view-terrarium','view-water','view-specs']);
+    wireTabs('.tab', ['view-terrarium','view-symbols','view-water','view-specs']);
     wireTabs('.subtab', ['spec-terrarium','spec-panel']);
 
     /* ---------- model ---------- */
@@ -48,7 +48,6 @@
       Tset = nv;
       setVal.textContent = Tset.toFixed(1) + '°';
       drawDist();
-      drawLogDist();
     });
 
     function heaterPower(){
@@ -278,107 +277,9 @@
       drawTransient();
       requestAnimationFrame(frame);
     }
-    /* ---------- graph 3: log-stretched distribution — height along the bottom,
-       theta log-squished on the right, theta linear on the left ---------- */
-    var gLog = document.getElementById('gLogDist');
-    function drawLogDist(){
-      if (!gLog) return;
-      var f = fitCanvas(gLog), ctx = f.ctx, W = f.w, H = f.h;
-      var muted = cssVar('--muted'), line = cssVar('--line'), heat = cssVar('--heat');
-      ctx.clearRect(0, 0, W, H);
-      var padL = 52, padR = 56, padT = 12, padB = 34;
-      var iw = W - padL - padR, ih = H - padT - padB;
-      var lMin = -1.8, lMax = 0; /* log10 theta range: 0.016 .. 1 */
-      /* height along the bottom, plain linear */
-      function X(zf){ return padL + zf * iw; }
-      /* normalised temperature up the side, log-squished (the right-hand scale) */
-      function Y(th){ var l = Math.log10(Math.max(th, Math.pow(10, lMin))); return padT + (lMax - l) / (lMax - lMin) * ih; }
-      /* the same theta on a plain linear scale (the left-hand scale) */
-      function Ylin(th){ return padT + (1 - th) * ih; }
-      /* anchor: average theta at H/2 across all curves — the chosen halfway point */
-      var thMid = 0;
-      distTemps.forEach(function(tp){
-        var dd = deltaOverH(tp), eH = Math.exp(-1 / dd);
-        thMid += (Math.exp(-0.5 / dd) - eH) / (1 - eH);
-      });
-      thMid /= distTemps.length;
-      ctx.font = '11px sans-serif'; ctx.lineWidth = 1;
-      /* vertical gridlines: height, linear — 0, H/2, H evenly spaced along the bottom */
-      ctx.strokeStyle = line; ctx.fillStyle = muted;
-      [[0, '0 (top)'], [0.5, 'H/2'], [1, 'H (bottom)']].forEach(function(mk){
-        var x = X(mk[0]);
-        ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ih); ctx.stroke();
-        ctx.textAlign = 'center'; ctx.fillText(mk[1], x, H - 18);
-      });
-      /* horizontal gridlines: theta at its log-squished positions (right-hand scale) */
-      [0.02, 0.05, 0.1, 0.2, 0.5, 1].forEach(function(th){
-        var y = Y(th);
-        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + iw, y); ctx.stroke();
-      });
-      /* right axis: theta, log-squished — ticks at the log positions */
-      var xR = padL + iw;
-      ctx.strokeStyle = muted; ctx.fillStyle = muted;
-      ctx.beginPath(); ctx.moveTo(xR, padT); ctx.lineTo(xR, padT + ih); ctx.stroke();
-      [0.02, 0.05, 0.1, 0.2, 0.5, 1].forEach(function(th){
-        var y = Y(th);
-        ctx.beginPath(); ctx.moveTo(xR, y); ctx.lineTo(xR + 4, y); ctx.stroke();
-        ctx.textAlign = 'left'; ctx.fillText(th < 1 ? String(th).replace('0.', '.') : '1', xR + 7, y + 4);
-      });
-      /* left axis: theta, plain linear — ticks evenly spaced, for comparison */
-      ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + ih); ctx.stroke();
-      [0, 0.25, 0.5, 0.75, 1].forEach(function(th){
-        var y = Ylin(th);
-        ctx.beginPath(); ctx.moveTo(padL - 4, y); ctx.lineTo(padL, y); ctx.stroke();
-        ctx.textAlign = 'right'; ctx.fillText(th.toFixed(2).replace('0.', '.'), padL - 7, y + 4);
-      });
-      /* H/2 line — emphasised, sitting exactly halfway along the bottom */
-      ctx.strokeStyle = muted; ctx.setLineDash([7, 4]); ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.moveTo(X(0.5), padT); ctx.lineTo(X(0.5), padT + ih); ctx.stroke();
-      ctx.setLineDash([]);
-      /* anchor line at theta(H/2) average, on the squished right-hand scale */
-      ctx.strokeStyle = heat; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.moveTo(padL, Y(thMid)); ctx.lineTo(padL + iw, Y(thMid)); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = heat; ctx.textAlign = 'left';
-      ctx.fillText('anchor θ(H/2) ≈ ' + thMid.toFixed(2), padL + 6, Y(thMid) - 6);
-      /* the curves, stretched to match the squishing: height linear on x,
-         theta log-squished on y — an exponential decay straightens out */
-      distTemps.forEach(function(tp, i){
-        var d = deltaOverH(tp), cur = Math.abs(tp - Tset) < 0.01;
-        var eH = Math.exp(-1 / d);
-        ctx.strokeStyle = distColors[i]; ctx.lineWidth = cur ? 3.4 : 1.6;
-        ctx.globalAlpha = cur ? 1 : 0.75;
-        ctx.beginPath();
-        var started = false;
-        for (var s = 0; s <= 80; s++){
-          var zf = s / 80, th = (Math.exp(-zf / d) - eH) / (1 - eH);
-          if (th < 0.017) break;
-          var x = X(zf), y = Y(th);
-          started ? ctx.lineTo(x, y) : ctx.moveTo(x, y); started = true;
-        }
-        ctx.stroke(); ctx.globalAlpha = 1;
-        /* dot where this curve crosses H/2 */
-        var thH = (Math.exp(-0.5 / d) - eH) / (1 - eH);
-        ctx.fillStyle = distColors[i];
-        ctx.beginPath(); ctx.arc(X(0.5), Y(thH), cur ? 4.4 : 3.2, 0, Math.PI * 2); ctx.fill();
-      });
-      /* No Bode overlay is drawn over these curves: on this log-theta scale
-         each spatial exponential is ONE straight line — no flat section,
-         no corner. The flat-then-down Bode shape belongs to the frequency
-         response, not to the spatial distribution (note, section 9). */
-      ctx.font = '11px sans-serif';
-      ctx.fillStyle = muted; ctx.textAlign = 'center';
-      ctx.fillText('height — linear', padL + iw / 2, H - 4);
-      ctx.save(); ctx.translate(11, padT + ih / 2); ctx.rotate(-Math.PI / 2);
-      ctx.fillText('normalised temperature θ — linear', 0, 0); ctx.restore();
-      ctx.save(); ctx.translate(W - 4, padT + ih / 2); ctx.rotate(Math.PI / 2);
-      ctx.fillText('normalised temperature θ — log scale (squished)', 0, 0); ctx.restore();
-    }
-
     drawDist();
-    drawLogDist();
     requestAnimationFrame(frame);
-    window.addEventListener('resize', function(){ drawDist(); drawLogDist(); });
+    window.addEventListener('resize', function(){ drawDist(); });
   })();
 
 /* ===== original page script 2 ===== */
@@ -1250,8 +1151,7 @@
       ctx.strokeStyle = heat; ctx.lineWidth = 2.6; ctx.beginPath();
       for (var k = 0; k <= 60; k++){ var zf = k / 60; k ? ctx.lineTo(X(zf), Y(thetaExp(zf))) : ctx.moveTo(X(zf), Y(thetaExp(zf))); }
       ctx.stroke();
-      /* No Bode overlay on this spatial graph: the flat-then-down Bode
-         shape belongs to the frequency response, not to distance. */
+      /* the exponential is the accurate model */
       /* labels */
       ctx.font = '11.5px sans-serif';
       ctx.fillStyle = blue; ctx.fillText('simplest / linear filter — full heat to H/2, then straight down', padL + 6, padT + 14);
