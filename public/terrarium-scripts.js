@@ -22,16 +22,18 @@
     var slider = document.getElementById('tempSlider');
     var setVal = document.getElementById('setVal');
     var Tset = parseFloat(slider.value);
-    var Tmean = Tset;          /* Newton exponential — the mean (simplification: swing removed) */
-    var Tact = Tset;           /* actual temperature — the oscillator signal */
-    var Vact = 0;              /* dT/dt of the actual (oscillator) temperature */
+    var Tmean = Tset;          /* the exponential the oscillator chases — its middle value; reaches the target at steady state */
+    var Tact = Tset;           /* actual temperature — the oscillator signal = exponential + swing */
     var WN_T = 0.52, ZE_T = 0.13; /* oscillator: swing period ≈ 12 s, envelope tau = 1/(ZE*WN) ≈ 15 s */
-    var stepT = -1000, stepAmp = 0; /* latest setpoint step, for the envelope */
+    var WD_T = WN_T * Math.sqrt(1 - ZE_T * ZE_T); /* damped swing frequency */
+    var SWING_K = 0.5;         /* swing amplitude per degree of setpoint step */
+    var dev = 0, vdev = 0;     /* swing about the exponential, and its rate */
     var tNow = 0;              /* sim seconds */
     var hist = [];             /* {t, T (actual/oscillator), Te (mean/exponential), Ts, e (envelope)} */
     for (var i = 100; i >= 0; i--) hist.push({ t: -i * 0.5, T: Tact, Te: Tmean, Ts: Tset, e: 0 });
     tNow = 0;
-    function envNow(t){ if(!stepAmp) return 0; var age = t - stepT; return age <= 0 ? Math.abs(stepAmp) : Math.abs(stepAmp) * Math.exp(-ZE_T * WN_T * age); }
+    /* the oscillator's own envelope: instantaneous amplitude of the swing about the exponential */
+    function envNow(){ var q = (vdev + ZE_T * WN_T * dev) / WD_T; return Math.sqrt(dev * dev + q * q); }
 
     var roTemp = document.getElementById('roTemp'),
         roState = document.getElementById('roState'),
@@ -44,7 +46,7 @@
 
     slider.addEventListener('input', function(){
       var nv = parseFloat(slider.value);
-      if (nv !== Tset){ stepT = tNow; stepAmp = Tact - nv; }
+      if (nv !== Tset){ vdev += SWING_K * (nv - Tset) * WD_T; } /* a step kicks off a swing sized to it */
       Tset = nv;
       setVal.textContent = Tset.toFixed(1) + '°';
       drawDist();
@@ -169,7 +171,7 @@
 
     /* ---------- graph 1: transient, last 100 s — OSCILLATOR graph ----------
        Actual temperature (oscillator signal): solid ORANGE.
-       Mean / Newton exponential (simplification, swing removed): dashed WHITE, behind.
+       The exponential it chases — the line it swings around, its middle value: dashed WHITE, behind.
        Envelope: dashed ORANGE. Y axis auto-zooms + recentres as it settles,
        same behaviour as the Water Level live graph. */
     var gT = document.getElementById('gTransient');
@@ -181,27 +183,19 @@
       ctx.clearRect(0, 0, W, H);
       var padL = 40, padR = 8, padT = 16, padB = 24;
       var iw = W - padL - padR, ih = H - padT - padB;
-      /* auto-zoom / recentre: target axis brackets the recent stretch of
-         everything drawn — actual, mean, setpoint and both envelopes (centred
-         on the mean) — with a little headroom. Only the last 20 s sets the
-         target, so as the curves converge the axis follows them in instead of
-         staying stretched to extremes that scrolled by up to 100 s ago. */
-      var dMin = Infinity, dMax = -Infinity, cMin = Infinity, cMax = -Infinity;
+      /* auto-zoom / recentre: target axis brackets where the curves have
+         actually been over the last 20 s — the actual temperature and the mean
+         (Newton exponential) — with a little headroom. The setpoint and the
+         envelope edges do not stretch the axis (they may run off-frame), so
+         the view centres and zooms on the curve itself and rescales as it moves. */
+      var dMin = Infinity, dMax = -Infinity;
       hist.forEach(function(p){
         if (p.t < tNow - 20) return;
-        dMin = Math.min(dMin, p.T, p.Te, p.Te - p.e, p.Ts);
-        dMax = Math.max(dMax, p.T, p.Te, p.Te + p.e, p.Ts);
-        cMin = Math.min(cMin, p.T, p.Te, p.Ts);
-        cMax = Math.max(cMax, p.T, p.Te, p.Ts);
+        dMin = Math.min(dMin, p.T, p.Te);
+        dMax = Math.max(dMax, p.T, p.Te);
       });
-      if (!isFinite(dMin)){ dMin = Tset - 1; dMax = Tset + 1; cMin = dMin; cMax = dMax; }
-      var mid = (dMin + dMax) / 2, span = Math.max(1.8, (dMax - dMin) * 1.3 + 0.5);
-      if (span > 34){
-        span = 34;
-        /* keep the curves themselves in frame even if an envelope edge clips */
-        if (cMin < mid - span / 2) mid = cMin + span / 2;
-        if (cMax > mid + span / 2) mid = cMax - span / 2;
-      }
+      if (!isFinite(dMin)){ dMin = Tset - 1; dMax = Tset + 1; }
+      var mid = (dMin + dMax) / 2, span = Math.min(34, Math.max(1.8, (dMax - dMin) * 1.3 + 0.5));
       yLoD += ((mid - span / 2) - yLoD) * 0.055;
       yHiD += ((mid + span / 2) - yHiD) * 0.055;
       if (yHiD - yLoD < 0.9){ var mm = (yLoD + yHiD) / 2; yLoD = mm - 0.45; yHiD = mm + 0.45; }
@@ -228,16 +222,16 @@
         ctx.textAlign = 'right'; ctx.fillText((tStep < 1 ? v.toFixed(1) : Math.round(v)) + '°', padL - 5, y + 4);
       }
       ctx.save(); ctx.beginPath(); ctx.rect(padL, padT, iw, ih); ctx.clip();
-      /* 1) mean — Newton exponential, white dashed, behind everything
+      /* 1) the exponential the oscillator chases, white dashed, behind everything
             (dark halo underneath so the white dashes read on a light panel) */
       ctx.setLineDash([7, 5]); ctx.strokeStyle = ink; ctx.globalAlpha = 0.30; ctx.lineWidth = 3.1;
       trace(function(p){ return p.Te; });
       ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = 1; ctx.lineWidth = 1.7;
       trace(function(p){ return p.Te; });
       ctx.setLineDash([]); ctx.globalAlpha = 1;
-      /* 2) envelope — dashed orange: centred on the mean, Te ± A e^(−t/τ)
-            from the latest step, so the Newton exponential runs down the
-            middle of the envelope and the oscillator swings around it */
+      /* 2) envelope — dashed orange: the oscillator signal's own envelope,
+            Te ± (amplitude of its swing), so the exponential it swings
+            around runs down the middle of the envelope */
       var hasEnv = false; hist.forEach(function(p){ if (p.e > 0.03) hasEnv = true; });
       if (hasEnv){
         ctx.strokeStyle = heat; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2; ctx.globalAlpha = 0.65;
@@ -348,25 +342,25 @@
       if (lastMs === null) lastMs = ms;
       var dt = Math.min(0.1, (ms - lastMs) / 1000); lastMs = ms;
       tNow += dt;
-      /* mean — Newton exponential (first-order): the simplification, swing removed */
+      /* the exponential the oscillator chases — rises to the target, reaching it at steady state */
       Tmean += (Tset - Tmean) * (1 - Math.exp(-dt / TAU));
-      /* actual — damped oscillator toward the same setpoint, substepped:
-         the underlying signal the exponential simplifies */
+      /* actual — the oscillator signal: the exponential plus a damped swing about it, substepped */
       var nSub = Math.max(1, Math.ceil(dt / 0.005)), hh = dt / nSub;
       for (var si = 0; si < nSub; si++){
-        var acT = WN_T * WN_T * (Tset - Tact) - 2 * ZE_T * WN_T * Vact;
-        Vact += acT * hh; Tact += Vact * hh;
+        var acT = -WN_T * WN_T * dev - 2 * ZE_T * WN_T * vdev;
+        vdev += acT * hh; dev += vdev * hh;
       }
+      Tact = Tmean + dev;
       acc += dt;
       if (acc >= 0.25){
         acc = 0;
-        hist.push({ t: tNow, T: Tact, Te: Tmean, Ts: Tset, e: envNow(tNow) });
+        hist.push({ t: tNow, T: Tact, Te: Tmean, Ts: Tset, e: envNow() });
         while (hist.length && hist[0].t < tNow - 100.5) hist.shift();
       }
       /* readouts — Mean air temp reads the mean (exponential); state waits for the oscillator to settle too */
       roTemp.textContent = Tmean.toFixed(1) + ' °C';
       var err = Math.abs(Tset - Tmean);
-      var steady = err < 0.05 && Math.abs(Tset - Tact) < 0.05 && envNow(tNow) < 0.1;
+      var steady = err < 0.05 && Math.abs(Tset - Tact) < 0.05 && envNow() < 0.1;
       roState.textContent = steady ? 'Steady state' : 'Transient';
       roState.className = 'v ' + (steady ? 'steady' : 'transient');
       var P = heaterPower();
@@ -401,21 +395,23 @@
     if(!slider) return;
     var setVal = document.getElementById('setValW');
     var Tset = parseFloat(slider.value);
-    var TaE = Tset, TwE = Tset;              /* Newton exponentials — the simplified solution */
-    var Tair = Tset, Twat = Tset;            /* actual temperatures — damped oscillation */
-    var Va = 0, Vw = 0;                      /* dT/dt of the actual temperatures */
+    var TaE = Tset, TwE = Tset;              /* the exponentials the oscillators chase — their middle values */
+    var Tair = Tset, Twat = Tset;            /* actual temperatures — exponential + damped swing */
     var WN_A = 0.55, ZE_A = 0.12;            /* air: swing period ≈ 11 s, envelope tau ≈ 15 s */
     var WN_W = 0.28, ZE_W = 0.15;            /* water: slower swing ≈ 22 s, envelope tau ≈ 24 s */
-    var stepT = -1000, ampA = 0, ampW = 0;   /* latest setpoint step, for the envelopes */
+    var WD_A = WN_A*Math.sqrt(1-ZE_A*ZE_A), WD_W = WN_W*Math.sqrt(1-ZE_W*ZE_W); /* damped swing frequencies */
+    var K_A = 0.5, K_W = 0.3;                /* swing amplitude per degree of setpoint step */
+    var dA = 0, vA = 0, dW = 0, vW = 0;      /* swings about the exponentials, and their rates */
     var tNow = 0, hist = [];
-    function envAt(amp, ze, wn, t){ if(!amp) return 0; var age = t - stepT; return age <= 0 ? amp : amp * Math.exp(-ze * wn * age); }
+    /* each oscillator's own envelope: instantaneous amplitude of its swing about its exponential */
+    function envOf(d, v, ze, wn, wd){ var q = (v + ze * wn * d) / wd; return Math.sqrt(d * d + q * q); }
     for (var i = 100; i >= 0; i--) hist.push({t:-i*0.5, Ta:Tair, Tw:Twat, TaE:TaE, TwE:TwE, Ts:Tset, eA:0, eW:0});
     var roAir=document.getElementById('roAirW'), roWat=document.getElementById('roWaterW'),
         roState=document.getElementById('roStateW'), roPow=document.getElementById('roPowerW'),
         rays=document.getElementById('raysW'), glowEl=document.getElementById('panelGlowW'),
         airTop=document.getElementById('airTopW'), watTop=document.getElementById('watTopW'),
         wline=document.getElementById('waterLineW');
-    slider.addEventListener('input', function(){ var nv=parseFloat(slider.value); if(nv!==Tset){ stepT=tNow; ampA=Math.abs(Tair-nv); ampW=Math.abs(Twat-nv); } Tset=nv; setVal.textContent=Tset.toFixed(1)+'°'; drawDistW(); });
+    slider.addEventListener('input', function(){ var nv=parseFloat(slider.value); if(nv!==Tset){ vA+=K_A*(nv-Tset)*WD_A; vW+=K_W*(nv-Tset)*WD_W; } Tset=nv; setVal.textContent=Tset.toFixed(1)+'°'; drawDistW(); });
     function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
     function fit(cv){ var r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
       var w=Math.max(200,Math.round(r.width)), h=230;
@@ -429,27 +425,18 @@
       var blue='#3e7cb1';
       ctx.clearRect(0,0,W,H);
       var padL=40,padR=8,padT=16,padB=24, iw=W-padL-padR, ih=H-padT-padB;
-      /* auto-zoom / recentre: the target axis brackets the recent stretch of everything
-         drawn — both curves, both exponentials, both envelopes (each centred on its own
-         exponential) and the setpoint — with a little headroom. Only the last 20 s sets
-         the target, so as the curves converge the axis follows them in instead of staying
-         stretched to extremes that scrolled by up to 100 s ago. */
-      var dMin=Infinity, dMax=-Infinity, cMin=Infinity, cMax=-Infinity;
+      /* auto-zoom / recentre: the target axis brackets where the curves have actually
+         been over the last 20 s — both curves and both exponentials — with a little
+         headroom. The setpoint and the envelope edges do not stretch the axis (they may
+         run off-frame), so the view centres and zooms on the curves themselves. */
+      var dMin=Infinity, dMax=-Infinity;
       hist.forEach(function(p){
         if(p.t<tNow-20) return;
-        dMin=Math.min(dMin,p.Ta,p.Tw,p.TaE,p.TwE,p.TaE-p.eA,p.TwE-p.eW,p.Ts);
-        dMax=Math.max(dMax,p.Ta,p.Tw,p.TaE,p.TwE,p.TaE+p.eA,p.TwE+p.eW,p.Ts);
-        cMin=Math.min(cMin,p.Ta,p.Tw,p.TaE,p.TwE,p.Ts);
-        cMax=Math.max(cMax,p.Ta,p.Tw,p.TaE,p.TwE,p.Ts);
+        dMin=Math.min(dMin,p.Ta,p.Tw,p.TaE,p.TwE);
+        dMax=Math.max(dMax,p.Ta,p.Tw,p.TaE,p.TwE);
       });
-      if(!isFinite(dMin)){ dMin=Tset-1; dMax=Tset+1; cMin=dMin; cMax=dMax; }
-      var mid=(dMin+dMax)/2, span=Math.max(1.8,(dMax-dMin)*1.3+0.5);
-      if(span>34){
-        span=34;
-        /* keep the curves themselves in frame even if an envelope edge clips */
-        if(cMin<mid-span/2) mid=cMin+span/2;
-        if(cMax>mid+span/2) mid=cMax-span/2;
-      }
+      if(!isFinite(dMin)){ dMin=Tset-1; dMax=Tset+1; }
+      var mid=(dMin+dMax)/2, span=Math.min(34,Math.max(1.8,(dMax-dMin)*1.3+0.5));
       yLoD+=((mid-span/2)-yLoD)*0.055;
       yHiD+=((mid+span/2)-yHiD)*0.055;
       if(yHiD-yLoD<0.9){ var mm=(yLoD+yHiD)/2; yLoD=mm-0.45; yHiD=mm+0.45; }
@@ -470,16 +457,16 @@
       for(var v=Math.ceil(yLo/tStep)*tStep; v<=yHi+1e-9; v+=tStep){ var y=Y(v); ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+iw,y); ctx.stroke(); ctx.textAlign='right'; ctx.fillText((tStep<1?v.toFixed(1):Math.round(v))+'\u00b0', padL-5, y+4); }
       /* curves clipped to the plot area while the axis is still easing toward its target */
       ctx.save(); ctx.beginPath(); ctx.rect(padL,padT,iw,ih); ctx.clip();
-      /* 1) Newton exponentials — white dashed, behind everything.
+      /* 1) the exponentials the oscillators chase — white dashed, behind everything.
             A thin dark halo is drawn under the white so the white dashes still read on a light panel. */
       [function(p){return p.TaE;}, function(p){return p.TwE;}].forEach(function(get){
         ctx.setLineDash([7,5]); ctx.strokeStyle=ink; ctx.globalAlpha=0.30; ctx.lineWidth=3.1; trace(get);
         ctx.strokeStyle='#ffffff'; ctx.globalAlpha=1; ctx.lineWidth=1.7; trace(get);
         ctx.setLineDash([]); ctx.globalAlpha=1;
       });
-      /* 2) envelopes — dashed, same colour as their own curve: centred on their own Newton
-            exponential, T_E \u00b1 A e^(\u2212t/\u03c4) from the latest step, so each white dashed
-            exponential runs down the middle of its envelope */
+      /* 2) envelopes — dashed, same colour as their own curve: each oscillator signal's
+            own envelope, T_E \u00b1 (amplitude of its swing), so each white dashed exponential
+            it swings around runs down the middle of its envelope */
       var hasEnv=false; hist.forEach(function(p){ if(p.eA>0.03||p.eW>0.03) hasEnv=true; });
       if(hasEnv){
         ctx.setLineDash([6,4]); ctx.lineWidth=1.2; ctx.globalAlpha=0.65;
@@ -609,19 +596,21 @@
     function frame(ms){
       if(lastMs===null) lastMs=ms;
       var dt=Math.min(0.1,(ms-lastMs)/1000); lastMs=ms; tNow+=dt;
-      /* Newton exponentials — first-order, no oscillation (the white dashed curves) */
+      /* the exponentials the oscillators chase (the white dashed curves) — reach the target at steady state */
       TaE += (Tset-TaE)*(1-Math.exp(-dt/TAU_AIR));
       TwE += (TaE-TwE)*(1-Math.exp(-dt/TAU_W));
-      /* actual temperatures — second-order damped oscillation toward the same targets, substepped */
+      /* actual temperatures — each its exponential plus a damped swing about it, substepped */
       var nSub=Math.max(1,Math.ceil(dt/0.005)), hh=dt/nSub;
       for(var si=0; si<nSub; si++){
-        var acA=WN_A*WN_A*(Tset-Tair)-2*ZE_A*WN_A*Va; Va+=acA*hh; Tair+=Va*hh;
-        var acW=WN_W*WN_W*(Tair-Twat)-2*ZE_W*WN_W*Vw; Vw+=acW*hh; Twat+=Vw*hh;
+        var acA=-WN_A*WN_A*dA-2*ZE_A*WN_A*vA; vA+=acA*hh; dA+=vA*hh;
+        var acW=-WN_W*WN_W*dW-2*ZE_W*WN_W*vW; vW+=acW*hh; dW+=vW*hh;
       }
+      Tair=TaE+dA; Twat=TwE+dW;
+      var eAnow=envOf(dA,vA,ZE_A,WN_A,WD_A), eWnow=envOf(dW,vW,ZE_W,WN_W,WD_W);
       acc+=dt;
-      if(acc>=0.25){ acc=0; hist.push({t:tNow,Ta:Tair,Tw:Twat,TaE:TaE,TwE:TwE,Ts:Tset,eA:envAt(ampA,ZE_A,WN_A,tNow),eW:envAt(ampW,ZE_W,WN_W,tNow)}); while(hist.length&&hist[0].t<tNow-100.5) hist.shift(); }
+      if(acc>=0.25){ acc=0; hist.push({t:tNow,Ta:Tair,Tw:Twat,TaE:TaE,TwE:TwE,Ts:Tset,eA:eAnow,eW:eWnow}); while(hist.length&&hist[0].t<tNow-100.5) hist.shift(); }
       roAir.textContent=Tair.toFixed(1)+' °C'; roWat.textContent=Twat.toFixed(1)+' °C';
-      var steady=Math.abs(Tset-Twat)<0.05 && envAt(ampW,ZE_W,WN_W,tNow)<0.1;
+      var steady=Math.abs(Tset-Twat)<0.05 && eWnow<0.1;
       roState.textContent=steady?'Steady state':'Transient'; roState.className='v '+(steady?'steady':'transient');
       var err=Tset-TaE, P=err<=0?0:PMAX*Math.min(1,err/3);
       roPow.textContent=P.toFixed(1)+' W';
